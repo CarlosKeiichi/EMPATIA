@@ -84,7 +84,8 @@ export async function POST(req: NextRequest) {
       resposta,
     });
   } catch (error) {
-    console.error('Erro no chat:', error);
-    return NextResponse.json({ erro: 'Erro ao processar mensagem' }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('Erro no chat:', errMsg, error);
+    return NextResponse.json({ erro: `Erro ao processar mensagem: ${errMsg}` }, { status: 500 });
   }
 }
