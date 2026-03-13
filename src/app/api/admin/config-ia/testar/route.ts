@@ -3,6 +3,8 @@ import { verificarAdmin } from '@/lib/admin-guard';
 import { enviarMensagem } from '@/lib/claude';
 import { testarConfigSchema } from '@/lib/validations';
 
+export const maxDuration = 60;
+
 // POST /api/admin/config-ia/testar — testar config com mensagem
 export async function POST(req: NextRequest) {
   const auth = await verificarAdmin();

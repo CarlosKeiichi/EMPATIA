@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db';
 import { getPerguntasPorJornadaDB } from '@/lib/perguntas';
 import { criarJornadaSchema, finalizarJornadaSchema } from '@/lib/validations';
 
+export const maxDuration = 60;
+
 // GET /api/jornada - Listar jornadas do professor
 export async function GET() {
   try {

@@ -4,6 +4,8 @@ import { enviarMensagem, MensagemChat } from '@/lib/claude';
 import { prisma } from '@/lib/db';
 import { chatSchema } from '@/lib/validations';
 
+export const maxDuration = 60;
+
 // POST /api/chat - Enviar mensagem para IA
 export async function POST(req: NextRequest) {
   try {
