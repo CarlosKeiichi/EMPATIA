@@ -3,7 +3,7 @@ import { getUsuarioLogado } from '@/lib/auth';
 import { gerarDiagnostico } from '@/lib/claude';
 import { calcularEstresseOcupacional } from '@/lib/scoring';
 import { prisma } from '@/lib/db';
-import { getPerguntasPorJornada } from '@/config/perguntas';
+import { getPerguntasPorJornadaDB } from '@/lib/perguntas';
 import { criarJornadaSchema, finalizarJornadaSchema } from '@/lib/validations';
 
 // GET /api/jornada - Listar jornadas do professor
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const perguntas = getPerguntasPorJornada(parsed.data.tipo);
+    const perguntas = await getPerguntasPorJornadaDB(parsed.data.tipo);
 
     return NextResponse.json({ jornada, perguntas });
   } catch (error) {

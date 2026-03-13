@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import AdminNav from '@/components/AdminNav';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -83,16 +84,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-organic font-[Nunito]">
-      <Header titulo="EmpatIA — Painel de Gestao" subtitulo="Dashboard Administrativo">
-        <a
-          href="/admin/professores"
-          className="text-sm text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200"
-        >
-          Professores
-        </a>
-      </Header>
+      <Header titulo="EmpatIA — Painel de Gestao" subtitulo="Dashboard Administrativo" />
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
+        <AdminNav />
+
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 stagger-children">
           <div className="bg-primary-50/60 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300">

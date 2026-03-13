@@ -159,3 +159,21 @@ model ConfiguracaoIA {
   ativo           Boolean  @default(true)
   atualizadoEm    DateTime @updatedAt
 }
+
+// ============================================
+// PERGUNTAS CONFIGURÁVEIS
+// ============================================
+
+model Pergunta {
+  id              String   @id @default(cuid())
+  codigo          String   @unique
+  jornada         String   // "trabalho" | "relacionamentos" | "financas" | "estresse"
+  bloco           String
+  texto           String
+  tipo            String   // "escala_0_10" | "multipla_escolha" | "frequencia" | "aberta"
+  opcoes          String?  // JSON array de { valor, label }
+  ordem           Int      @default(0)
+  ativa           Boolean  @default(true)
+  criadaEm        DateTime @default(now())
+  atualizadaEm    DateTime @updatedAt
+}

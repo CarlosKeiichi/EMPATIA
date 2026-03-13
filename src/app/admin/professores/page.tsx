@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import AdminNav from '@/components/AdminNav';
 
 interface ProfessorResumo {
   id: string;
@@ -40,16 +41,11 @@ export default function ProfessoresPage() {
 
   return (
     <div className="min-h-screen bg-organic font-[Nunito]">
-      <Header titulo="Professores" subtitulo="Visao anonimizada dos respondentes">
-        <a
-          href="/admin"
-          className="text-sm text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200"
-        >
-          Voltar ao painel
-        </a>
-      </Header>
+      <Header titulo="Professores" subtitulo="Visao anonimizada dos respondentes" />
 
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl mx-auto p-6 space-y-6">
+        <AdminNav />
+
         {carregando ? (
           <div className="text-center py-16 animate-fade-in">
             <div className="w-10 h-10 border-3 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
