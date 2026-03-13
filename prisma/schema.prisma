@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUÁRIOS E AUTENTICAÇÃO
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  senha     String
+  nome      String
+  role      String   @default("professor") // "professor" | "admin" | "superadmin"
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  professor Professor?
+  admin     Admin?
+}
+
+model Professor {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  genero        String?
+  faixaEtaria   String?
+  frequenciaAulas String?
+  escolaId      String?
+  escola        Escola?  @relation(fields: [escolaId], references: [id])
+  criadoEm      DateTime @default(now())
+
+  jornadas      Jornada[]
+  diagnosticos  Diagnostico[]
+  conversas     Conversa[]
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  escolaId  String?
+  escola    Escola?  @relation(fields: [escolaId], references: [id])
+  cargo     String?
+  criadoEm  DateTime @default(now())
+}
+
+// ============================================
+// ESTRUTURA ESCOLAR
+// ============================================
+
+model Escola {
+  id          String   @id @default(cuid())
+  nome        String
+  cidade      String?
+  estado      String?
+  redeEnsino  String?  // "municipal" | "estadual" | "federal" | "privada"
+  ativa       Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+
+  professores Professor[]
+  admins      Admin[]
+}
+
+// ============================================
+// JORNADAS E RESPOSTAS
+// ============================================
+
+model Jornada {
+  id            String   @id @default(cuid())
+  professorId   String
+  professor     Professor @relation(fields: [professorId], references: [id])
+  tipo          String   // "trabalho" | "relacionamentos" | "financas"
+  status        String   @default("em_andamento") // "em_andamento" | "concluida" | "abandonada"
+  etapaAtual    String   @default("contextualizacao")
+  estadoEmocionalInicial String? // A-E
+  estadoEmocionalFinal   String? // A-E
+  pontuacaoTotal Float?
+  nivelRisco     String?  // "baixo" | "moderado" | "elevado" | "critico"
+  iniciadaEm    DateTime @default(now())
+  concluidaEm   DateTime?
+
+  respostas     Resposta[]
+  diagnostico   Diagnostico?
+}
+
+model Resposta {
+  id          String   @id @default(cuid())
+  jornadaId   String
+  jornada     Jornada  @relation(fields: [jornadaId], references: [id])
+  bloco       String   // ex: "lideranca_sistema", "colegas", "alunos", etc
+  perguntaId  String
+  pergunta    String
+  tipo        String   // "escala_0_10" | "multipla_escolha" | "frequencia" | "aberta"
+  valor       String   // valor da resposta
+  pontuacao   Float?   // pontuação calculada
+  criadaEm    DateTime @default(now())
+}
+
+// ============================================
+// DIAGNÓSTICOS
+// ============================================
+
+model Diagnostico {
+  id                String   @id @default(cuid())
+  professorId       String
+  professor         Professor @relation(fields: [professorId], references: [id])
+  jornadaId         String   @unique
+  jornada           Jornada  @relation(fields: [jornadaId], references: [id])
+  perfilEmocional   String   // A-E
+  nivelEstresse     String   // "baixo" | "moderado" | "elevado"
+  pontosAtencao     String   // JSON array de pontos
+  planoAcao         String   // Texto gerado pela IA
+  resumoIA          String?  // Resumo interpretativo da IA
+  pontuacaoIRPE     Float?
+  criadoEm          DateTime @default(now())
+}
+
+// ============================================
+// CONVERSAS COM IA (SUPORTE CONTÍNUO)
+// ============================================
+
+model Conversa {
+  id            String   @id @default(cuid())
+  professorId   String
+  professor     Professor @relation(fields: [professorId], references: [id])
+  tipo          String   @default("suporte") // "jornada" | "suporte"
+  criadaEm      DateTime @default(now())
+
+  mensagens     Mensagem[]
+}
+
+model Mensagem {
+  id          String   @id @default(cuid())
+  conversaId  String
+  conversa    Conversa @relation(fields: [conversaId], references: [id])
+  role        String   // "user" | "assistant"
+  conteudo    String
+  criadaEm    DateTime @default(now())
+}
+
+// ============================================
+// CONFIGURAÇÕES DA IA
+// ============================================
+
+model ConfiguracaoIA {
+  id              String   @id @default(cuid())
+  nome            String   @unique // ex: "marcia_acolhimento", "marcia_jornada_trabalho"
+  systemPrompt    String   // prompt do sistema
+  temperatura     Float    @default(0.7)
+  modelo          String   @default("claude-sonnet-4-20250514")
+  descricao       String?
+  ativo           Boolean  @default(true)
+  atualizadoEm    DateTime @updatedAt
+}
