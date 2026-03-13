@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-troque-em-producao');
+const JWT_SECRET = new TextEncoder().encode((process.env.JWT_SECRET || 'dev-secret-troque-em-producao').trim());
 
 const PUBLIC_ROUTES = ['/', '/cadastro', '/api/auth'];
 
