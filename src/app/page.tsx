@@ -52,12 +52,8 @@ export default function HomePage() {
           <div className="absolute -bottom-24 left-1/3 w-80 h-80 bg-primary-300/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '2s' }} />
         </div>
 
-        <div className="relative z-10 flex items-center gap-4 animate-fade-in">
-          <Logo size={48} />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">EmpatIA</h1>
-            <p className="text-primary-200 mt-0.5 text-sm font-medium">Saude Mental do Professor</p>
-          </div>
+        <div className="relative z-10 animate-fade-in">
+          <Logo size={100} showText variant="light" />
         </div>
 
         <div className="relative z-10 space-y-8 stagger-children">
@@ -105,9 +101,8 @@ export default function HomePage() {
 
         <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Logo mobile */}
-          <div className="lg:hidden mb-10 text-center animate-slide-up">
+          <div className="lg:hidden mb-10 flex justify-center animate-slide-up">
             <Logo size={48} showText />
-            <p className="text-warm-500 mt-2 text-sm font-medium">Saude Mental do Professor</p>
           </div>
 
           <div className="card p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
