@@ -36,23 +36,23 @@ const iconesTipo: Record<string, string> = {
 };
 
 const coresTipo: Record<string, string> = {
-  trabalho: 'bg-blue-50 border-blue-200 text-blue-700',
-  relacionamentos: 'bg-amber-50 border-amber-200 text-amber-700',
-  financas: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+  trabalho: 'bg-primary-50/60 border-primary-200/50 text-primary-700',
+  relacionamentos: 'bg-warm-50/60 border-warm-300/50 text-warm-700',
+  financas: 'bg-primary-50/40 border-primary-100/50 text-primary-700',
 };
 
 const perfisEmocional: Record<string, { label: string; emoji: string }> = {
   A: { label: 'Muito fortalecido(a)', emoji: '💪' },
   B: { label: 'Esperançoso(a)', emoji: '🌟' },
   C: { label: 'Em alerta', emoji: '⚡' },
-  D: { label: 'Cansado(a)', emoji: '😔' },
-  E: { label: 'Sobrecarregado(a)', emoji: '🆘' },
+  D: { label: 'Cansado(a)', emoji: '😮‍💨' },
+  E: { label: 'Sobrecarregado(a)', emoji: '🫂' },
 };
 
 const coresEstresse: Record<string, string> = {
-  baixo: 'bg-green-100 text-green-700',
-  moderado: 'bg-yellow-100 text-yellow-700',
-  elevado: 'bg-red-100 text-red-700',
+  baixo: 'bg-emotion-strength/10 text-primary-800',
+  moderado: 'bg-emotion-alert/10 text-primary-800',
+  elevado: 'bg-emotion-overwhelm/10 text-primary-800',
 };
 
 export default function HistoricoPage() {
@@ -79,140 +79,166 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-warm-50 bg-organic">
       <Header titulo="Histórico" subtitulo="Suas jornadas anteriores">
-        <button onClick={() => router.push('/professor')} className="text-sm text-primary-600 hover:underline">
+        <button
+          onClick={() => router.push('/professor')}
+          className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-300"
+        >
           Nova jornada
         </button>
       </Header>
 
-      <main className="max-w-3xl mx-auto p-4 space-y-4">
+      <main className="max-w-3xl mx-auto p-4 space-y-4 pb-8">
         {carregando ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-gray-400 text-sm mt-2">Carregando histórico...</p>
+          <div className="text-center py-16 animate-fade-in">
+            <div className="w-10 h-10 border-2 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-primary-300 text-sm mt-4 font-medium">Carregando histórico...</p>
           </div>
         ) : jornadas.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className="text-gray-500 mb-4">Você ainda não realizou nenhuma jornada.</p>
+          <div className="card text-center py-16 animate-fade-in">
+            <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🌱</span>
+            </div>
+            <p className="text-warm-500 mb-6 leading-relaxed">Você ainda não realizou nenhuma jornada.</p>
             <button onClick={() => router.push('/professor')} className="btn-primary">
               Iniciar minha primeira jornada
             </button>
           </div>
         ) : (
-          jornadas.map((j) => {
-            const aberta = expandida === j.id;
-            const perfil = j.diagnostico ? perfisEmocional[j.diagnostico.perfilEmocional] : null;
+          <div className="stagger-children space-y-4">
+            {jornadas.map((j) => {
+              const aberta = expandida === j.id;
+              const perfil = j.diagnostico ? perfisEmocional[j.diagnostico.perfilEmocional] : null;
 
-            return (
-              <div key={j.id} className="card">
-                <button
-                  onClick={() => setExpandida(aberta ? null : j.id)}
-                  className="w-full text-left"
+              return (
+                <div
+                  key={j.id}
+                  className="card transition-all duration-300 hover:shadow-warm-lg"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{iconesTipo[j.tipo] || '📋'}</span>
-                      <div>
-                        <h3 className="font-semibold text-gray-800">
-                          {nomesJornada[j.tipo] || j.tipo}
-                        </h3>
-                        <p className="text-xs text-gray-400">{formatarData(j.iniciadaEm)}</p>
+                  <button
+                    onClick={() => setExpandida(aberta ? null : j.id)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <span className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-2xl">
+                          {iconesTipo[j.tipo] || '📋'}
+                        </span>
+                        <div>
+                          <h3 className="font-bold text-primary-950">
+                            {nomesJornada[j.tipo] || j.tipo}
+                          </h3>
+                          <p className="text-xs text-primary-400 font-medium mt-0.5">{formatarData(j.iniciadaEm)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {j.status === 'concluida' ? (
+                          <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${coresTipo[j.tipo]}`}>
+                            Concluída
+                          </span>
+                        ) : (
+                          <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-warm-100 text-warm-600">
+                            Em andamento
+                          </span>
+                        )}
+                        <svg
+                          className={`w-4 h-4 text-primary-300 transition-transform duration-300 ${aberta ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {j.status === 'concluida' ? (
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full border ${coresTipo[j.tipo]}`}>
-                          Concluída
-                        </span>
-                      ) : (
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-500">
-                          Em andamento
-                        </span>
-                      )}
-                      <svg
-                        className={`w-4 h-4 text-gray-400 transition-transform ${aberta ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </button>
+                  </button>
 
-                {aberta && j.diagnostico && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
-                    {/* Perfil emocional */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{perfil?.emoji}</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{perfil?.label}</p>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${coresEstresse[j.diagnostico.nivelEstresse] || 'bg-gray-100 text-gray-600'}`}>
-                          Estresse: {j.diagnostico.nivelEstresse}
-                        </span>
-                      </div>
-                    </div>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      aberta ? 'max-h-[1000px] opacity-100 mt-5' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    {j.diagnostico && (
+                      <div className="pt-5 border-t border-primary-100/40 space-y-5">
+                        {/* Perfil emocional */}
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center">
+                            <span className="text-2xl">{perfil?.emoji}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-primary-950">{perfil?.label}</p>
+                            <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-xl mt-1 ${coresEstresse[j.diagnostico.nivelEstresse] || 'bg-warm-100 text-warm-600'}`}>
+                              Estresse: {j.diagnostico.nivelEstresse}
+                            </span>
+                          </div>
+                        </div>
 
-                    {/* Resumo */}
-                    {j.diagnostico.resumoIA && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-1">Resumo</h4>
-                        <p className="text-sm text-gray-500 leading-relaxed">{j.diagnostico.resumoIA}</p>
+                        {/* Resumo */}
+                        {j.diagnostico.resumoIA && (
+                          <div>
+                            <h4 className="text-sm font-bold text-primary-800 mb-2">Resumo</h4>
+                            <p className="text-sm text-warm-600 leading-relaxed">{j.diagnostico.resumoIA}</p>
+                          </div>
+                        )}
+
+                        {/* Pontos de atenção */}
+                        {j.diagnostico.pontosAtencao && (
+                          <div>
+                            <h4 className="text-sm font-bold text-primary-800 mb-2">Pontos de atenção</h4>
+                            <ul className="space-y-2">
+                              {(() => {
+                                try {
+                                  return (JSON.parse(j.diagnostico.pontosAtencao) as string[]).map((p, i) => (
+                                    <li key={i} className="flex items-start gap-3 text-sm text-warm-600">
+                                      <span className="flex-shrink-0 w-5 h-5 rounded-lg bg-emotion-alert/10 flex items-center justify-center text-emotion-alert text-[10px] font-bold mt-0.5">
+                                        {i + 1}
+                                      </span>
+                                      <span className="leading-relaxed">{p}</span>
+                                    </li>
+                                  ));
+                                } catch {
+                                  return null;
+                                }
+                              })()}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Plano de ação */}
+                        {j.diagnostico.planoAcao && (
+                          <div className="bg-primary-50/60 rounded-2xl p-5 border border-primary-100/40">
+                            <h4 className="text-sm font-bold text-primary-800 mb-2">Recomendações</h4>
+                            <p className="text-sm text-primary-700 leading-relaxed whitespace-pre-wrap">
+                              {j.diagnostico.planoAcao}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Pontos de atenção */}
-                    {j.diagnostico.pontosAtencao && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-1">Pontos de atenção</h4>
-                        <ul className="space-y-1">
-                          {(() => {
-                            try {
-                              return (JSON.parse(j.diagnostico.pontosAtencao) as string[]).map((p, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
-                                  <span className="text-amber-500 mt-0.5">●</span>
-                                  {p}
-                                </li>
-                              ));
-                            } catch {
-                              return null;
-                            }
-                          })()}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Plano de ação */}
-                    {j.diagnostico.planoAcao && (
-                      <div className="bg-primary-50 rounded-xl p-4">
-                        <h4 className="text-sm font-medium text-primary-800 mb-1">Recomendações</h4>
-                        <p className="text-sm text-primary-700 leading-relaxed whitespace-pre-wrap">
-                          {j.diagnostico.planoAcao}
-                        </p>
+                    {!j.diagnostico && j.status === 'em_andamento' && (
+                      <div className="pt-5 border-t border-primary-100/40 text-center py-6">
+                        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-3">
+                          <span className="text-lg">💬</span>
+                        </div>
+                        <p className="text-sm text-warm-500 mb-4">Esta jornada ainda não foi finalizada.</p>
+                        <button
+                          onClick={() => {
+                            sessionStorage.setItem('tipoJornada', j.tipo);
+                            router.push('/professor/jornada');
+                          }}
+                          className="btn-primary text-sm"
+                        >
+                          Continuar jornada
+                        </button>
                       </div>
                     )}
                   </div>
-                )}
-
-                {aberta && !j.diagnostico && j.status === 'em_andamento' && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-                    <p className="text-sm text-gray-400 mb-3">Esta jornada ainda não foi finalizada.</p>
-                    <button
-                      onClick={() => {
-                        sessionStorage.setItem('tipoJornada', j.tipo);
-                        router.push('/professor/jornada');
-                      }}
-                      className="btn-primary text-sm"
-                    >
-                      Continuar jornada
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })
+                </div>
+              );
+            })}
+          </div>
         )}
       </main>
     </div>

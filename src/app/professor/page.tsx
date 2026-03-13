@@ -10,33 +10,66 @@ const jornadas = [
     titulo: 'Trabalho',
     descricao: 'Explore como sua atividade docente impacta seu emocional',
     icone: '🏫',
-    cor: 'bg-blue-50 border-blue-200 hover:border-blue-400',
-    corTexto: 'text-blue-700',
+    cor: 'bg-primary-50/60 border-primary-200/60 hover:border-primary-400 hover:bg-primary-50',
+    corTexto: 'text-primary-700',
+    corIconeBg: 'bg-primary-100',
   },
   {
     tipo: 'relacionamentos',
     titulo: 'Relacionamentos',
     descricao: 'Reflita sobre suas relações pessoais e inteligência emocional',
     icone: '💛',
-    cor: 'bg-amber-50 border-amber-200 hover:border-amber-400',
-    corTexto: 'text-amber-700',
+    cor: 'bg-warm-50/60 border-warm-300/60 hover:border-warm-400 hover:bg-warm-50',
+    corTexto: 'text-warm-700',
+    corIconeBg: 'bg-warm-100',
   },
   {
     tipo: 'financas',
     titulo: 'Finanças',
     descricao: 'Entenda como sua situação financeira afeta seu bem-estar',
     icone: '💰',
-    cor: 'bg-emerald-50 border-emerald-200 hover:border-emerald-400',
-    corTexto: 'text-emerald-700',
+    cor: 'bg-primary-50/40 border-primary-100/60 hover:border-primary-300 hover:bg-primary-50/60',
+    corTexto: 'text-primary-800',
+    corIconeBg: 'bg-primary-50',
   },
 ];
 
 const estadosEmocionais = [
-  { valor: 'A', label: 'Muito fortalecido(a)', cor: 'bg-green-100 border-green-400 text-green-700' },
-  { valor: 'B', label: 'Esperançoso(a)', cor: 'bg-blue-100 border-blue-400 text-blue-700' },
-  { valor: 'C', label: 'Em alerta', cor: 'bg-yellow-100 border-yellow-400 text-yellow-700' },
-  { valor: 'D', label: 'Cansado(a)', cor: 'bg-orange-100 border-orange-400 text-orange-700' },
-  { valor: 'E', label: 'Sobrecarregado(a)', cor: 'bg-red-100 border-red-400 text-red-700' },
+  {
+    valor: 'A',
+    label: 'Muito fortalecido(a)',
+    emoji: '💪',
+    corAtivo: 'bg-emotion-strength/10 border-emotion-strength/50 text-primary-900',
+    corBorda: 'border-emotion-strength/30',
+  },
+  {
+    valor: 'B',
+    label: 'Esperançoso(a)',
+    emoji: '🌟',
+    corAtivo: 'bg-emotion-hope/10 border-emotion-hope/50 text-primary-900',
+    corBorda: 'border-emotion-hope/30',
+  },
+  {
+    valor: 'C',
+    label: 'Em alerta',
+    emoji: '⚡',
+    corAtivo: 'bg-emotion-alert/10 border-emotion-alert/50 text-primary-900',
+    corBorda: 'border-emotion-alert/30',
+  },
+  {
+    valor: 'D',
+    label: 'Cansado(a)',
+    emoji: '😮‍💨',
+    corAtivo: 'bg-emotion-tired/10 border-emotion-tired/50 text-primary-900',
+    corBorda: 'border-emotion-tired/30',
+  },
+  {
+    valor: 'E',
+    label: 'Sobrecarregado(a)',
+    emoji: '🫂',
+    corAtivo: 'bg-emotion-overwhelm/10 border-emotion-overwhelm/50 text-primary-900',
+    corBorda: 'border-emotion-overwhelm/30',
+  },
 ];
 
 export default function ProfessorHome() {
@@ -45,7 +78,6 @@ export default function ProfessorHome() {
   const [estadoEmocional, setEstadoEmocional] = useState('');
 
   function iniciarJornada(tipo: string) {
-    // Salva no sessionStorage e navega
     sessionStorage.setItem('estadoEmocionalInicial', estadoEmocional);
     sessionStorage.setItem('tipoJornada', tipo);
     router.push('/professor/jornada');
@@ -54,29 +86,47 @@ export default function ProfessorHome() {
   // Tela de boas-vindas
   if (etapa === 'boas_vindas') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-lg w-full text-center space-y-6">
-          <Logo size={80} className="mx-auto" />
+      <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+        <div className="max-w-lg w-full text-center space-y-8 animate-fade-in">
+          <div className="animate-float">
+            <Logo size={80} className="mx-auto" />
+          </div>
 
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Olá! Eu sou a Márcia</h1>
-            <p className="text-xs text-purple-400 font-medium">powered by EmpatIA</p>
-            <p className="text-gray-500 mt-2">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-primary-950">Olá! Eu sou a Márcia</h1>
+            <p className="text-xs text-primary-400 font-semibold tracking-wide">powered by EmpatIA</p>
+            <p className="text-warm-600 mt-3 leading-relaxed">
               Estou aqui para te ouvir e ajudar a refletir sobre como você está se sentindo.
             </p>
           </div>
 
-          <div className="card text-left space-y-3">
-            <p className="text-gray-600 text-sm">Antes de começarmos, quero que você saiba:</p>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex gap-2"><span>✅</span> Isso não é uma prova — não existem respostas certas ou erradas</li>
-              <li className="flex gap-2"><span>🔒</span> Suas respostas são anônimas e protegidas</li>
-              <li className="flex gap-2"><span>💚</span> Vá no seu ritmo — pode pausar quando quiser</li>
-              <li className="flex gap-2"><span>🎯</span> No final, você receberá um retrato personalizado</li>
+          <div className="card text-left space-y-4 animate-slide-up">
+            <p className="text-warm-700 text-sm font-medium">Antes de começarmos, quero que você saiba:</p>
+            <ul className="space-y-3 text-sm text-warm-600 stagger-children">
+              <li className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">✅</span>
+                <span className="pt-1">Isso não é uma prova — não existem respostas certas ou erradas</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">🔒</span>
+                <span className="pt-1">Suas respostas são anônimas e protegidas</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">💚</span>
+                <span className="pt-1">Vá no seu ritmo — pode pausar quando quiser</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">🎯</span>
+                <span className="pt-1">No final, você receberá um retrato personalizado</span>
+              </li>
             </ul>
           </div>
 
-          <button onClick={() => setEtapa('estado_emocional')} className="btn-primary">
+          <button
+            onClick={() => setEtapa('estado_emocional')}
+            className="btn-primary w-full animate-slide-up"
+            style={{ animationDelay: '0.3s' }}
+          >
             Estou pronto(a) para começar
           </button>
         </div>
@@ -87,27 +137,28 @@ export default function ProfessorHome() {
   // Tela de estado emocional
   if (etapa === 'estado_emocional') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-lg w-full space-y-6">
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-gray-800">Como você está se sentindo agora?</h2>
-            <p className="text-gray-500 mt-1 text-sm">
+      <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+        <div className="max-w-lg w-full space-y-8 animate-fade-in">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-primary-950">Como você está se sentindo agora?</h2>
+            <p className="text-warm-500 text-sm leading-relaxed">
               Em relação à sua saúde emocional como educador(a):
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-children">
             {estadosEmocionais.map((estado) => (
               <button
                 key={estado.valor}
                 onClick={() => setEstadoEmocional(estado.valor)}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-300 flex items-center gap-4 ${
                   estadoEmocional === estado.valor
-                    ? estado.cor
-                    : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+                    ? `${estado.corAtivo} shadow-warm scale-[1.02]`
+                    : `bg-white/70 backdrop-blur-sm ${estado.corBorda} hover:bg-white hover:shadow-warm-sm text-primary-800`
                 }`}
               >
-                <span className="font-medium">{estado.label}</span>
+                <span className="text-2xl">{estado.emoji}</span>
+                <span className="font-semibold">{estado.label}</span>
               </button>
             ))}
           </div>
@@ -126,37 +177,39 @@ export default function ProfessorHome() {
 
   // Tela de escolha da jornada
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-lg w-full space-y-6">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-800">Qual área da vida você quer explorar?</h2>
-          <p className="text-gray-500 mt-1 text-sm">
+    <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+      <div className="max-w-lg w-full space-y-8 animate-fade-in">
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-bold text-primary-950">Qual área da vida você quer explorar?</h2>
+          <p className="text-warm-500 text-sm leading-relaxed">
             Escolha por onde quer começar. Você pode fazer as outras depois.
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 stagger-children">
           {jornadas.map((j) => (
             <button
               key={j.tipo}
               onClick={() => iniciarJornada(j.tipo)}
-              className={`w-full p-5 rounded-xl border-2 text-left transition-all ${j.cor}`}
+              className={`w-full p-6 rounded-3xl border-2 text-left transition-all duration-300 hover:shadow-warm-lg hover:-translate-y-0.5 backdrop-blur-sm ${j.cor}`}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{j.icone}</span>
+              <div className="flex items-center gap-4">
+                <span className={`flex-shrink-0 w-14 h-14 rounded-2xl ${j.corIconeBg} flex items-center justify-center text-3xl`}>
+                  {j.icone}
+                </span>
                 <div>
-                  <h3 className={`font-semibold ${j.corTexto}`}>{j.titulo}</h3>
-                  <p className="text-gray-500 text-sm">{j.descricao}</p>
+                  <h3 className={`font-bold text-lg ${j.corTexto}`}>{j.titulo}</h3>
+                  <p className="text-warm-500 text-sm mt-0.5 leading-relaxed">{j.descricao}</p>
                 </div>
               </div>
             </button>
           ))}
         </div>
 
-        <div className="text-center space-y-2">
+        <div className="text-center">
           <button
             onClick={() => router.push('/professor/historico')}
-            className="text-sm text-gray-400 hover:text-gray-600 underline"
+            className="text-sm text-primary-400 hover:text-primary-600 font-medium transition-colors duration-300 underline underline-offset-4 decoration-primary-200 hover:decoration-primary-400"
           >
             Ver meu histórico de jornadas
           </button>

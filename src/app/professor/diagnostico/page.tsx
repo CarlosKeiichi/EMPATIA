@@ -12,18 +12,43 @@ interface Diagnostico {
   resumoIA: string;
 }
 
-const perfisEmocional: Record<string, { label: string; cor: string; emoji: string }> = {
-  A: { label: 'Muito fortalecido(a)', cor: 'bg-green-50 border-green-300 text-green-700', emoji: '💪' },
-  B: { label: 'Esperançoso(a)', cor: 'bg-blue-50 border-blue-300 text-blue-700', emoji: '🌟' },
-  C: { label: 'Em alerta', cor: 'bg-yellow-50 border-yellow-300 text-yellow-700', emoji: '⚡' },
-  D: { label: 'Cansado(a)', cor: 'bg-orange-50 border-orange-300 text-orange-700', emoji: '😔' },
-  E: { label: 'Sobrecarregado(a)', cor: 'bg-red-50 border-red-300 text-red-700', emoji: '🆘' },
+const perfisEmocional: Record<string, { label: string; cor: string; emoji: string; corBg: string }> = {
+  A: {
+    label: 'Muito fortalecido(a)',
+    cor: 'border-emotion-strength/40 text-primary-900',
+    corBg: 'bg-emotion-strength/8',
+    emoji: '💪',
+  },
+  B: {
+    label: 'Esperançoso(a)',
+    cor: 'border-emotion-hope/40 text-primary-900',
+    corBg: 'bg-emotion-hope/8',
+    emoji: '🌟',
+  },
+  C: {
+    label: 'Em alerta',
+    cor: 'border-emotion-alert/40 text-primary-900',
+    corBg: 'bg-emotion-alert/8',
+    emoji: '⚡',
+  },
+  D: {
+    label: 'Cansado(a)',
+    cor: 'border-emotion-tired/40 text-primary-900',
+    corBg: 'bg-emotion-tired/8',
+    emoji: '😮‍💨',
+  },
+  E: {
+    label: 'Sobrecarregado(a)',
+    cor: 'border-emotion-overwhelm/40 text-primary-900',
+    corBg: 'bg-emotion-overwhelm/8',
+    emoji: '🫂',
+  },
 };
 
-const niveisEstresse: Record<string, { cor: string }> = {
-  baixo: { cor: 'bg-green-100 text-green-700' },
-  moderado: { cor: 'bg-yellow-100 text-yellow-700' },
-  elevado: { cor: 'bg-red-100 text-red-700' },
+const niveisEstresse: Record<string, { cor: string; label: string }> = {
+  baixo: { cor: 'bg-emotion-strength/10 text-primary-800', label: 'Baixo' },
+  moderado: { cor: 'bg-emotion-alert/10 text-primary-800', label: 'Moderado' },
+  elevado: { cor: 'bg-emotion-overwhelm/10 text-primary-800', label: 'Elevado' },
 };
 
 export default function DiagnosticoPage() {
@@ -46,9 +71,12 @@ export default function DiagnosticoPage() {
 
   if (!diagnostico) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <p className="text-gray-500">Nenhum diagnóstico encontrado.</p>
+      <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+        <div className="text-center space-y-5 animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <p className="text-warm-500 leading-relaxed">Nenhum diagnóstico encontrado.</p>
           <button onClick={() => router.push('/professor')} className="btn-primary">
             Iniciar uma jornada
           </button>
@@ -61,36 +89,51 @@ export default function DiagnosticoPage() {
   const estresse = niveisEstresse[diagnostico.nivelEstresse] || niveisEstresse['moderado'];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-warm-50 bg-organic">
       <Header titulo="Seu Retrato Emocional" subtitulo="Diagnóstico personalizado" />
-      <div className="max-w-2xl mx-auto space-y-6 p-4">
+
+      <div className="max-w-2xl mx-auto space-y-6 p-4 pb-8 animate-fade-in">
 
         {/* Perfil Emocional */}
-        <div className={`card border-2 ${perfil.cor} text-center`}>
-          <span className="text-4xl">{perfil.emoji}</span>
-          <h2 className="text-lg font-semibold mt-2">{perfil.label}</h2>
-          <span className={`inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full ${estresse.cor}`}>
+        <div className={`card border-2 ${perfil.cor} ${perfil.corBg} text-center py-8 animate-slide-up`}>
+          <div className="w-20 h-20 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center mx-auto shadow-warm-sm">
+            <span className="text-4xl">{perfil.emoji}</span>
+          </div>
+          <h2 className="text-xl font-bold text-primary-950 mt-4">{perfil.label}</h2>
+          <span className={`inline-block mt-3 text-xs font-semibold px-4 py-1.5 rounded-xl ${estresse.cor}`}>
             Nível de estresse: {diagnostico.nivelEstresse}
           </span>
         </div>
 
         {/* Resumo da IA */}
         {diagnostico.resumoIA && (
-          <div className="card">
-            <h3 className="font-semibold text-gray-800 mb-2">O que percebemos</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">{diagnostico.resumoIA}</p>
+          <div className="card animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-primary-100 flex items-center justify-center">
+                <span className="text-sm">💬</span>
+              </div>
+              <h3 className="font-bold text-primary-950">O que percebemos</h3>
+            </div>
+            <p className="text-warm-600 text-sm leading-relaxed">{diagnostico.resumoIA}</p>
           </div>
         )}
 
         {/* Pontos de atenção */}
         {pontosAtencao.length > 0 && (
-          <div className="card">
-            <h3 className="font-semibold text-gray-800 mb-3">Pontos de atenção</h3>
-            <div className="space-y-2">
+          <div className="card animate-slide-up" style={{ animationDelay: '0.15s' }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-emotion-alert/10 flex items-center justify-center">
+                <span className="text-sm">🔔</span>
+              </div>
+              <h3 className="font-bold text-primary-950">Pontos de atenção</h3>
+            </div>
+            <div className="space-y-3 stagger-children">
               {pontosAtencao.map((ponto, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-amber-500 mt-0.5">●</span>
-                  <span className="text-gray-600">{ponto}</span>
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-emotion-alert/10 flex items-center justify-center text-emotion-alert text-xs mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-warm-600 leading-relaxed">{ponto}</span>
                 </div>
               ))}
             </div>
@@ -98,15 +141,23 @@ export default function DiagnosticoPage() {
         )}
 
         {/* Plano de ação */}
-        <div className="card bg-primary-50 border-primary-200">
-          <h3 className="font-semibold text-primary-800 mb-2">Recomendações para você</h3>
+        <div
+          className="card bg-primary-50/60 border-primary-200/50 animate-slide-up"
+          style={{ animationDelay: '0.2s' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-xl bg-primary-200/50 flex items-center justify-center">
+              <span className="text-sm">🌱</span>
+            </div>
+            <h3 className="font-bold text-primary-800">Recomendações para você</h3>
+          </div>
           <p className="text-primary-700 text-sm leading-relaxed whitespace-pre-wrap">
             {diagnostico.planoAcao}
           </p>
         </div>
 
         {/* Ações */}
-        <div className="flex flex-col gap-3 pb-8">
+        <div className="flex flex-col gap-3 pt-2 animate-slide-up" style={{ animationDelay: '0.25s' }}>
           <button
             onClick={() => router.push('/professor/jornada')}
             className="btn-primary text-center"

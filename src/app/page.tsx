@@ -44,66 +44,81 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex">
       {/* Lado esquerdo - branding EmpatIA */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] p-12 flex-col justify-between text-white">
-        <div className="flex items-center gap-4">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 p-12 flex-col justify-between text-white relative overflow-hidden">
+        {/* Organic background shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-breathe" />
+          <div className="absolute top-1/2 -right-20 w-72 h-72 bg-primary-400/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute -bottom-24 left-1/3 w-80 h-80 bg-primary-300/5 rounded-full blur-3xl animate-breathe" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="relative z-10 flex items-center gap-4 animate-fade-in">
           <Logo size={48} />
           <div>
-            <h1 className="text-3xl font-bold">EmpatIA</h1>
-            <p className="text-purple-300 mt-0.5 text-sm">Saúde Mental do Professor</p>
+            <h1 className="text-3xl font-bold tracking-tight">EmpatIA</h1>
+            <p className="text-primary-200 mt-0.5 text-sm font-medium">Saude Mental do Professor</p>
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-              <span className="text-lg">💬</span>
+        <div className="relative z-10 space-y-8 stagger-children">
+          <div className="flex items-start gap-4 group">
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5 shadow-warm-sm group-hover:bg-white/15 transition-colors duration-300">
+              <span className="text-xl">💬</span>
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Jornada Conversacional</h3>
-              <p className="text-purple-200/70 text-sm">Converse com a Márcia, nossa IA acolhedora, e explore seus sentimentos de forma segura.</p>
+              <h3 className="font-semibold text-lg text-white/95">Jornada Conversacional</h3>
+              <p className="text-primary-200/70 text-sm leading-relaxed mt-1">Converse com a Marcia, nossa IA acolhedora, e explore seus sentimentos de forma segura.</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-              <span className="text-lg">📊</span>
+          <div className="flex items-start gap-4 group">
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5 shadow-warm-sm group-hover:bg-white/15 transition-colors duration-300">
+              <span className="text-xl">📊</span>
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Diagnóstico Personalizado</h3>
-              <p className="text-purple-200/70 text-sm">Receba um retrato emocional com recomendações práticas para seu bem-estar.</p>
+              <h3 className="font-semibold text-lg text-white/95">Diagnostico Personalizado</h3>
+              <p className="text-primary-200/70 text-sm leading-relaxed mt-1">Receba um retrato emocional com recomendacoes praticas para seu bem-estar.</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
-              <span className="text-lg">🔒</span>
+          <div className="flex items-start gap-4 group">
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5 shadow-warm-sm group-hover:bg-white/15 transition-colors duration-300">
+              <span className="text-xl">🔒</span>
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Sigilo Garantido</h3>
-              <p className="text-purple-200/70 text-sm">Suas respostas são anonimizadas. Ninguém verá seus dados individuais.</p>
+              <h3 className="font-semibold text-lg text-white/95">Sigilo Garantido</h3>
+              <p className="text-primary-200/70 text-sm leading-relaxed mt-1">Suas respostas sao anonimizadas. Ninguem vera seus dados individuais.</p>
             </div>
           </div>
         </div>
 
-        <p className="text-purple-400/50 text-xs">EmpatIA — Desenvolvido com cuidado para quem cuida.</p>
+        <p className="relative z-10 text-primary-300/40 text-xs font-medium animate-fade-in" style={{ animationDelay: '1.2s' }}>
+          EmpatIA — Desenvolvido com cuidado para quem cuida.
+        </p>
       </div>
 
       {/* Lado direito - login */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-warm-50 bg-organic relative">
+        {/* Subtle warm decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-50/40 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+
+        <div className="w-full max-w-md relative z-10 animate-fade-in">
           {/* Logo mobile */}
-          <div className="lg:hidden mb-8 text-center">
+          <div className="lg:hidden mb-10 text-center animate-slide-up">
             <Logo size={48} showText />
-            <p className="text-gray-500 mt-1 text-sm">Saúde Mental do Professor</p>
+            <p className="text-warm-500 mt-2 text-sm font-medium">Saude Mental do Professor</p>
           </div>
 
-          <div className="card">
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">Entrar na plataforma</h2>
-            <p className="text-gray-500 text-sm mb-6">Use suas credenciais para acessar</p>
+          <div className="card p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-warm-800">Bem-vindo de volta</h2>
+              <p className="text-warm-500 text-sm mt-1">Entre para continuar sua jornada de bem-estar</p>
+            </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-1.5">Email</label>
                 <input
                   type="email"
                   className="input"
@@ -115,7 +130,7 @@ export default function HomePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-1.5">Senha</label>
                 <input
                   type="password"
                   className="input"
@@ -127,26 +142,36 @@ export default function HomePage() {
               </div>
 
               {erro && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg">{erro}</div>
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl border border-red-100 animate-fade-in">
+                  {erro}
+                </div>
               )}
 
-              <button type="submit" className="btn-primary w-full bg-[#7c6bab] hover:bg-[#6b5a9a]" disabled={carregando}>
-                {carregando ? 'Entrando...' : 'Entrar'}
+              <button type="submit" className="btn-primary w-full" disabled={carregando}>
+                {carregando ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Entrando...
+                  </span>
+                ) : 'Entrar'}
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <p className="text-sm text-gray-500">
+            <div className="mt-6 pt-5 border-t border-primary-50 text-center">
+              <p className="text-sm text-warm-500">
                 Primeiro acesso?{' '}
-                <a href="/cadastro" className="text-[#7c6bab] font-medium hover:underline">
+                <a href="/cadastro" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors">
                   Cadastre-se aqui
                 </a>
               </p>
             </div>
           </div>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Ao entrar, você concorda com nossos termos de privacidade e uso ético dos dados.
+          <p className="text-center text-xs text-warm-400 mt-6 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            Ao entrar, voce concorda com nossos termos de privacidade e uso etico dos dados.
           </p>
         </div>
       </div>

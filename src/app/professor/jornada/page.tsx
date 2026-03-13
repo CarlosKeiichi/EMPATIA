@@ -34,9 +34,9 @@ export default function JornadaPage() {
   };
 
   const coresJornada: Record<string, string> = {
-    trabalho: 'bg-blue-500',
-    relacionamentos: 'bg-amber-500',
-    financas: 'bg-emerald-500',
+    trabalho: 'bg-primary-500',
+    relacionamentos: 'bg-warm-500',
+    financas: 'bg-primary-400',
   };
 
   // Scroll automático
@@ -181,12 +181,12 @@ export default function JornadaPage() {
 
   if (erroInicio) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-red-500 text-xl">!</span>
+      <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+        <div className="text-center space-y-5 animate-fade-in">
+          <div className="w-14 h-14 bg-emotion-overwhelm/10 rounded-2xl flex items-center justify-center mx-auto">
+            <span className="text-emotion-overwhelm text-xl font-bold">!</span>
           </div>
-          <p className="text-gray-600">{erroInicio}</p>
+          <p className="text-warm-600 leading-relaxed">{erroInicio}</p>
           <button onClick={() => router.push('/professor')} className="btn-secondary">
             Voltar
           </button>
@@ -196,19 +196,21 @@ export default function JornadaPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-warm-50">
       {/* Header do chat */}
-      <header className="border-b border-gray-100 px-4 py-3 flex items-center justify-between bg-white sticky top-0 z-10">
+      <header className="bg-white/70 backdrop-blur-md border-b border-primary-100/40 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <LogoMini size={32} />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center shadow-warm-sm">
+              <span className="text-sm font-bold text-primary-700">M</span>
+            </div>
             <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ${coresJornada[tipoJornada || 'trabalho']} rounded-full border-2 border-white`} />
           </div>
           <div>
-            <h1 className="font-semibold text-gray-800 text-sm">Márcia</h1>
-            <p className="text-xs text-gray-400">
+            <h1 className="font-bold text-primary-950 text-sm">Márcia</h1>
+            <p className="text-xs text-primary-400 font-medium">
               Jornada: {nomesJornada[tipoJornada || ''] || 'Trabalho'}
-              {etapaAtual > 0 && <span className="ml-1 text-gray-300">· Etapa {etapaAtual}</span>}
+              {etapaAtual > 0 && <span className="ml-1 text-primary-300">· Etapa {etapaAtual}</span>}
             </p>
           </div>
         </div>
@@ -217,14 +219,14 @@ export default function JornadaPage() {
             <button
               onClick={finalizarJornada}
               disabled={finalizando}
-              className="text-xs bg-primary-50 text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-100 transition disabled:opacity-50"
+              className="text-xs font-semibold bg-primary-50 text-primary-600 px-4 py-2 rounded-xl hover:bg-primary-100 hover:shadow-warm-sm transition-all duration-300 disabled:opacity-50"
             >
               {finalizando ? 'Finalizando...' : 'Finalizar jornada'}
             </button>
           )}
           <button
             onClick={() => router.push('/professor')}
-            className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1.5"
+            className="text-xs text-primary-400 hover:text-primary-600 font-medium px-2 py-1.5 transition-colors duration-300"
           >
             Sair
           </button>
@@ -232,18 +234,24 @@ export default function JornadaPage() {
       </header>
 
       {/* Mensagens */}
-      <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-5 bg-organic">
         {mensagens.length === 0 && !carregando && (
-          <div className="text-center text-gray-400 text-sm py-12">
+          <div className="text-center text-primary-300 text-sm py-16 animate-breathe">
+            <div className="w-12 h-12 rounded-2xl bg-primary-100/50 flex items-center justify-center mx-auto mb-3">
+              <span className="text-primary-400 text-lg font-bold">M</span>
+            </div>
             Iniciando conversa com a Márcia...
           </div>
         )}
 
         {mensagens.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div
+            key={i}
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
+          >
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                <span className="text-xs font-medium text-primary-700">M</span>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center mr-2.5 mt-1 flex-shrink-0 shadow-warm-sm">
+                <span className="text-xs font-bold text-primary-700">M</span>
               </div>
             )}
             <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}>
@@ -253,41 +261,41 @@ export default function JornadaPage() {
         ))}
 
         {carregando && (
-          <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-              <span className="text-xs font-medium text-primary-700">M</span>
+          <div className="flex justify-start animate-fade-in">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center mr-2.5 mt-1 flex-shrink-0 shadow-warm-sm">
+              <span className="text-xs font-bold text-primary-700">M</span>
             </div>
-            <div className="chat-bubble-ai flex gap-1 py-4">
-              <div className="typing-dot w-2 h-2 bg-gray-400 rounded-full" />
-              <div className="typing-dot w-2 h-2 bg-gray-400 rounded-full" />
-              <div className="typing-dot w-2 h-2 bg-gray-400 rounded-full" />
+            <div className="chat-bubble-ai flex gap-1.5 py-4">
+              <div className="typing-dot w-2 h-2 bg-primary-300 rounded-full" />
+              <div className="typing-dot w-2 h-2 bg-primary-300 rounded-full" />
+              <div className="typing-dot w-2 h-2 bg-primary-300 rounded-full" />
             </div>
           </div>
         )}
       </div>
 
       {/* Escala rápida de 0-10 */}
-      <div className="px-4 pb-2">
-        <div className="flex gap-1 justify-center flex-wrap">
+      <div className="px-4 pb-2 bg-warm-50">
+        <div className="flex gap-1.5 justify-center flex-wrap">
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
             <button
               key={n}
               onClick={() => selecionarEscala(n)}
               disabled={carregando}
-              className="w-9 h-9 rounded-lg text-xs font-medium border border-gray-200 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition disabled:opacity-50"
+              className="w-9 h-9 rounded-xl text-xs font-semibold border-2 border-primary-100/60 bg-white/70 backdrop-blur-sm hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 text-primary-600 transition-all duration-300 disabled:opacity-50 hover:shadow-warm-sm"
             >
               {n}
             </button>
           ))}
         </div>
-        <p className="text-center text-[10px] text-gray-400 mt-1">
+        <p className="text-center text-[10px] text-primary-300 mt-1.5 font-medium">
           0 = não incomoda · 10 = muito grave
         </p>
       </div>
 
       {/* Input */}
-      <form onSubmit={handleEnviar} className="border-t border-gray-100 p-4 bg-white sticky bottom-0">
-        <div className="flex gap-2">
+      <form onSubmit={handleEnviar} className="border-t border-primary-100/30 p-4 bg-white/70 backdrop-blur-md sticky bottom-0">
+        <div className="flex gap-3">
           <input
             ref={inputRef}
             type="text"
@@ -300,7 +308,7 @@ export default function JornadaPage() {
           <button
             type="submit"
             disabled={carregando || !input.trim()}
-            className="btn-primary px-4 disabled:opacity-50"
+            className="btn-primary px-5 disabled:opacity-50"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
