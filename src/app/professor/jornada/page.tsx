@@ -25,7 +25,7 @@ export default function JornadaPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tipoJornada = typeof window !== 'undefined' ? sessionStorage.getItem('tipoJornada') : 'trabalho';
-  const estadoInicial = typeof window !== 'undefined' ? sessionStorage.getItem('estadoEmocionalInicial') : 'C';
+  const estadoInicial = typeof window !== 'undefined' ? (sessionStorage.getItem('estadoEmocionalInicial') || 'C') : 'C';
   const configIA = `marcia_jornada_${tipoJornada}`;
 
   const nomesJornada: Record<string, string> = {

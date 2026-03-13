@@ -79,7 +79,7 @@ export default function ProfessorHome() {
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [diasDesdeUltima, setDiasDesdeUltima] = useState<number | null>(null);
   const [temLembrete, setTemLembrete] = useState(false);
-  const [jornadaAberta, setJornadaAberta] = useState<{ id: string; tipo: string; iniciadaEm: string } | null>(null);
+  const [jornadaAberta, setJornadaAberta] = useState<{ id: string; tipo: string; iniciadaEm: string; estadoEmocionalInicial: string | null } | null>(null);
   const [abandonando, setAbandonando] = useState(false);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function ProfessorHome() {
           (j: { status: string }) => j.status === 'em_andamento'
         );
         if (emAndamento) {
-          setJornadaAberta({ id: emAndamento.id, tipo: emAndamento.tipo, iniciadaEm: emAndamento.iniciadaEm });
+          setJornadaAberta({ id: emAndamento.id, tipo: emAndamento.tipo, iniciadaEm: emAndamento.iniciadaEm, estadoEmocionalInicial: emAndamento.estadoEmocionalInicial });
         }
 
         const concluidas = todasJornadas.filter(
@@ -142,6 +142,7 @@ export default function ProfessorHome() {
     if (!jornadaAberta) return;
     sessionStorage.setItem('tipoJornada', jornadaAberta.tipo);
     sessionStorage.setItem('jornadaAbertaId', jornadaAberta.id);
+    sessionStorage.setItem('estadoEmocionalInicial', jornadaAberta.estadoEmocionalInicial || 'C');
     router.push('/professor/jornada');
   }
 
