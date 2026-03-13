@@ -92,8 +92,19 @@ export default function JornadaPage() {
 
       if (!res.ok) {
         if (res.status === 409) {
-          setErroInicio('Você já tem uma jornada em andamento. Redirecionando...');
-          setTimeout(() => router.push('/professor'), 2000);
+          // Jornada já existe — buscar e continuar em vez de redirecionar
+          const jornadasRes = await fetch('/api/jornada');
+          const jornadasData = await jornadasRes.json();
+          const aberta = jornadasData.jornadas?.find((j: { status: string }) => j.status === 'em_andamento');
+          if (aberta) {
+            setJornadaId(aberta.id);
+            const ctx = nomeUsuario
+              ? `O nome do professor(a) é ${nomeUsuario}. Ele(a) está retomando uma jornada. Cumprimente e acolha.`
+              : 'O professor(a) está retomando uma jornada. Acolha e continue.';
+            await enviarParaIA('Olá! Estou retomando minha jornada.', true, ctx);
+            return;
+          }
+          setErroInicio('Erro ao encontrar jornada em andamento.');
           return;
         }
         setErroInicio(data.erro || 'Erro ao iniciar jornada');
