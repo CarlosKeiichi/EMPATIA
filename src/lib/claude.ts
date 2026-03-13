@@ -7,7 +7,7 @@ let clienteAnthropic: Anthropic | null = null;
 function getCliente(): Anthropic {
   if (!clienteAnthropic) {
     clienteAnthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.ANTHROPIC_API_KEY?.trim(),
     });
   }
   return clienteAnthropic;

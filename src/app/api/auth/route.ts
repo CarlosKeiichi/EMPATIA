@@ -44,9 +44,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ user: resultado.user });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error('Erro no login:', msg, error);
-    return NextResponse.json({ erro: 'Erro interno', detalhe: msg }, { status: 500 });
+    console.error('Erro no login:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
   }
 }
 

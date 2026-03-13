@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { prisma } from './db';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-troque-em-producao');
+const JWT_SECRET = new TextEncoder().encode((process.env.JWT_SECRET || 'dev-secret-troque-em-producao').trim());
 
 export interface TokenPayload {
   userId: string;
