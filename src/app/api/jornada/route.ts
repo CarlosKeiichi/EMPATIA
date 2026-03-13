@@ -60,7 +60,14 @@ export async function POST(req: NextRequest) {
     });
     if (jornadaAberta) {
       return NextResponse.json(
-        { erro: 'Você já tem uma jornada em andamento. Finalize-a antes de iniciar outra.' },
+        {
+          erro: 'Você já tem uma jornada em andamento.',
+          jornadaAberta: {
+            id: jornadaAberta.id,
+            tipo: jornadaAberta.tipo,
+            iniciadaEm: jornadaAberta.iniciadaEm,
+          },
+        },
         { status: 409 }
       );
     }
@@ -78,6 +85,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ jornada, perguntas });
   } catch (error) {
     console.error('Erro ao criar jornada:', error);
+    return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
+  }
+}
+
+// DELETE /api/jornada - Abandonar jornada em andamento
+export async function DELETE(req: NextRequest) {
+  try {
+    const usuario = await getUsuarioLogado();
+    if (!usuario) {
+      return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const jornadaId = searchParams.get('jornadaId');
+    if (!jornadaId) {
+      return NextResponse.json({ erro: 'jornadaId é obrigatório' }, { status: 400 });
+    }
+
+    const professor = await prisma.professor.findUnique({ where: { userId: usuario.userId } });
+    if (!professor) {
+      return NextResponse.json({ erro: 'Professor não encontrado' }, { status: 404 });
+    }
+
+    const jornada = await prisma.jornada.findUnique({ where: { id: jornadaId } });
+    if (!jornada || jornada.professorId !== professor.id) {
+      return NextResponse.json({ erro: 'Jornada não encontrada' }, { status: 404 });
+    }
+    if (jornada.status !== 'em_andamento') {
+      return NextResponse.json({ erro: 'Só é possível abandonar jornadas em andamento' }, { status: 400 });
+    }
+
+    // Deletar respostas associadas e a jornada
+    await prisma.resposta.deleteMany({ where: { jornadaId } });
+    await prisma.jornada.delete({ where: { id: jornadaId } });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('Erro ao abandonar jornada:', error);
     return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
   }
 }

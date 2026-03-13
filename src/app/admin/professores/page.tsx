@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import AdminNav from '@/components/AdminNav';
+import AdminLayout from '@/components/AdminLayout';
 
 interface ProfessorResumo {
   id: string;
@@ -19,9 +18,9 @@ interface ProfessorResumo {
 }
 
 const coresEstresse: Record<string, string> = {
-  baixo: 'bg-green-100/80 text-green-700 border border-green-200/50',
-  moderado: 'bg-yellow-100/80 text-yellow-700 border border-yellow-200/50',
-  elevado: 'bg-red-100/80 text-red-700 border border-red-200/50',
+  baixo: 'bg-[#e8f5ee] text-[#2d7a5e] border border-[#c5e6d4]',
+  moderado: 'bg-[#fef9ee] text-[#b8860b] border border-[#f5e6c0]',
+  elevado: 'bg-[#fef2f2] text-[#dc6b6b] border border-[#fcd5d5]',
 };
 
 const emojisPerfil: Record<string, string> = {
@@ -40,74 +39,70 @@ export default function ProfessoresPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-organic font-[Nunito]">
-      <Header titulo="Professores" subtitulo="Visao anonimizada dos respondentes" />
-
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <AdminNav />
-
-        {carregando ? (
-          <div className="text-center py-16 animate-fade-in">
-            <div className="w-10 h-10 border-3 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-primary-400 text-sm font-medium mt-3">Carregando professores...</p>
+    <AdminLayout titulo="Professores" subtitulo="Visão anonimizada dos respondentes">
+      {carregando ? (
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-[#2d7a5e] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-[#9a9590] text-sm font-medium">Carregando professores...</p>
           </div>
-        ) : professores.length === 0 ? (
-          <div className="card text-center py-16 animate-fade-in">
-            <div className="text-4xl mb-3">🌱</div>
-            <p className="text-primary-500 font-medium">Nenhum professor respondeu ainda.</p>
-            <p className="text-primary-400 text-sm mt-1">Os dados aparecerao aqui conforme os professores completarem suas jornadas.</p>
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-            {professores.map((prof) => (
-              <div
-                key={prof.id}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-6 hover:shadow-warm hover:-translate-y-0.5 transition-all duration-300 animate-slide-up"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-primary-800 text-base">{prof.identificador}</h3>
-                  {prof.ultimoDiagnostico && (
-                    <span className="text-2xl drop-shadow-sm">
-                      {emojisPerfil[prof.ultimoDiagnostico.perfilEmocional] || '❓'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2 text-sm text-primary-600">
-                  {prof.genero && (
-                    <p className="flex items-center gap-2">
-                      <span className="text-primary-400">Genero:</span>
-                      <span className="font-medium">{prof.genero}</span>
-                    </p>
-                  )}
-                  {prof.faixaEtaria && (
-                    <p className="flex items-center gap-2">
-                      <span className="text-primary-400">Faixa etaria:</span>
-                      <span className="font-medium">{prof.faixaEtaria}</span>
-                    </p>
-                  )}
-                  <p className="flex items-center gap-2">
-                    <span className="text-primary-400">Jornadas:</span>
-                    <span className="font-medium">{prof.jornadasConcluidas}/{prof.totalJornadas}</span>
-                  </p>
-                </div>
-
+        </div>
+      ) : professores.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#ece8e1] text-center py-16 px-8">
+          <div className="text-4xl mb-3">🌱</div>
+          <p className="text-[#4a4842] font-semibold">Nenhum professor respondeu ainda.</p>
+          <p className="text-[#9a9590] text-sm mt-1">Os dados aparecerão aqui conforme os professores completarem suas jornadas.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {professores.map((prof) => (
+            <div
+              key={prof.id}
+              className="bg-white rounded-2xl border border-[#ece8e1] p-5 hover:shadow-sm transition-shadow duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-[#2d2a26] text-[14px]">{prof.identificador}</h3>
                 {prof.ultimoDiagnostico && (
-                  <div className="mt-4 pt-4 border-t border-primary-100/40">
-                    <span
-                      className={`text-xs font-bold px-3 py-1.5 rounded-full ${
-                        coresEstresse[prof.ultimoDiagnostico.nivelEstresse] || 'bg-primary-50 text-primary-600 border border-primary-100/50'
-                      }`}
-                    >
-                      Estresse: {prof.ultimoDiagnostico.nivelEstresse}
-                    </span>
-                  </div>
+                  <span className="text-xl">
+                    {emojisPerfil[prof.ultimoDiagnostico.perfilEmocional] || '❓'}
+                  </span>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+
+              <div className="space-y-2 text-[13px]">
+                {prof.genero && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#9a9590]">Gênero</span>
+                    <span className="font-semibold text-[#4a4842]">{prof.genero}</span>
+                  </div>
+                )}
+                {prof.faixaEtaria && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#9a9590]">Faixa etária</span>
+                    <span className="font-semibold text-[#4a4842]">{prof.faixaEtaria}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-[#9a9590]">Jornadas</span>
+                  <span className="font-semibold text-[#4a4842]">{prof.jornadasConcluidas}/{prof.totalJornadas}</span>
+                </div>
+              </div>
+
+              {prof.ultimoDiagnostico && (
+                <div className="mt-4 pt-4 border-t border-[#ece8e1]">
+                  <span
+                    className={`text-[11px] font-bold px-3 py-1.5 rounded-full ${
+                      coresEstresse[prof.ultimoDiagnostico.nivelEstresse] || 'bg-[#f5f3ef] text-[#4a4842] border border-[#ece8e1]'
+                    }`}
+                  >
+                    Estresse: {prof.ultimoDiagnostico.nivelEstresse}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </AdminLayout>
   );
 }

@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts';
 
 interface Jornada {
   id: string;
@@ -55,6 +59,14 @@ const coresEstresse: Record<string, string> = {
   elevado: 'bg-emotion-overwhelm/10 text-primary-800',
 };
 
+const emocionalParaScore: Record<string, number> = {
+  A: 5, B: 4, C: 3, D: 2, E: 1,
+};
+
+const estresseParaScore: Record<string, number> = {
+  baixo: 1, moderado: 2, elevado: 3,
+};
+
 export default function HistoricoPage() {
   const router = useRouter();
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
@@ -78,6 +90,24 @@ export default function HistoricoPage() {
     });
   }
 
+  function formatarDataCurta(data: string) {
+    return new Date(data).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+    });
+  }
+
+  // Dados para o grafico de evolucao
+  const concluidas = jornadas
+    .filter((j) => j.status === 'concluida' && j.diagnostico)
+    .sort((a, b) => new Date(a.iniciadaEm).getTime() - new Date(b.iniciadaEm).getTime());
+
+  const dadosEvolucao = concluidas.map((j) => ({
+    data: formatarDataCurta(j.iniciadaEm),
+    emocional: emocionalParaScore[j.diagnostico!.perfilEmocional] || 3,
+    estresse: estresseParaScore[j.diagnostico!.nivelEstresse] || 2,
+  }));
+
   return (
     <div className="min-h-screen bg-warm-50 bg-organic">
       <Header titulo="Histórico" subtitulo="Suas jornadas anteriores">
@@ -89,7 +119,7 @@ export default function HistoricoPage() {
         </button>
       </Header>
 
-      <main className="max-w-3xl mx-auto p-4 space-y-4 pb-8">
+      <main className="max-w-3xl mx-auto p-4 space-y-6 pb-8">
         {carregando ? (
           <div className="text-center py-16 animate-fade-in">
             <div className="w-10 h-10 border-2 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -106,139 +136,211 @@ export default function HistoricoPage() {
             </button>
           </div>
         ) : (
-          <div className="stagger-children space-y-4">
-            {jornadas.map((j) => {
-              const aberta = expandida === j.id;
-              const perfil = j.diagnostico ? perfisEmocional[j.diagnostico.perfilEmocional] : null;
-
-              return (
-                <div
-                  key={j.id}
-                  className="card transition-all duration-300 hover:shadow-warm-lg"
-                >
-                  <button
-                    onClick={() => setExpandida(aberta ? null : j.id)}
-                    className="w-full text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-2xl">
-                          {iconesTipo[j.tipo] || '📋'}
-                        </span>
-                        <div>
-                          <h3 className="font-bold text-primary-950">
-                            {nomesJornada[j.tipo] || j.tipo}
-                          </h3>
-                          <p className="text-xs text-primary-400 font-medium mt-0.5">{formatarData(j.iniciadaEm)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {j.status === 'concluida' ? (
-                          <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${coresTipo[j.tipo]}`}>
-                            Concluída
-                          </span>
-                        ) : (
-                          <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-warm-100 text-warm-600">
-                            Em andamento
-                          </span>
-                        )}
-                        <svg
-                          className={`w-4 h-4 text-primary-300 transition-transform duration-300 ${aberta ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
-
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                      aberta ? 'max-h-[1000px] opacity-100 mt-5' : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    {j.diagnostico && (
-                      <div className="pt-5 border-t border-primary-100/40 space-y-5">
-                        {/* Perfil emocional */}
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center">
-                            <span className="text-2xl">{perfil?.emoji}</span>
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-primary-950">{perfil?.label}</p>
-                            <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-xl mt-1 ${coresEstresse[j.diagnostico.nivelEstresse] || 'bg-warm-100 text-warm-600'}`}>
-                              Estresse: {j.diagnostico.nivelEstresse}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Resumo */}
-                        {j.diagnostico.resumoIA && (
-                          <div>
-                            <h4 className="text-sm font-bold text-primary-800 mb-2">Resumo</h4>
-                            <p className="text-sm text-warm-600 leading-relaxed">{j.diagnostico.resumoIA}</p>
-                          </div>
-                        )}
-
-                        {/* Pontos de atenção */}
-                        {j.diagnostico.pontosAtencao && (
-                          <div>
-                            <h4 className="text-sm font-bold text-primary-800 mb-2">Pontos de atenção</h4>
-                            <ul className="space-y-2">
-                              {(() => {
-                                try {
-                                  return (JSON.parse(j.diagnostico.pontosAtencao) as string[]).map((p, i) => (
-                                    <li key={i} className="flex items-start gap-3 text-sm text-warm-600">
-                                      <span className="flex-shrink-0 w-5 h-5 rounded-lg bg-emotion-alert/10 flex items-center justify-center text-emotion-alert text-[10px] font-bold mt-0.5">
-                                        {i + 1}
-                                      </span>
-                                      <span className="leading-relaxed">{p}</span>
-                                    </li>
-                                  ));
-                                } catch {
-                                  return null;
-                                }
-                              })()}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Plano de ação */}
-                        {j.diagnostico.planoAcao && (
-                          <div className="bg-primary-50/60 rounded-2xl p-5 border border-primary-100/40">
-                            <h4 className="text-sm font-bold text-primary-800 mb-2">Recomendações</h4>
-                            <p className="text-sm text-primary-700 leading-relaxed whitespace-pre-wrap">
-                              {j.diagnostico.planoAcao}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {!j.diagnostico && j.status === 'em_andamento' && (
-                      <div className="pt-5 border-t border-primary-100/40 text-center py-6">
-                        <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-3">
-                          <span className="text-lg">💬</span>
-                        </div>
-                        <p className="text-sm text-warm-500 mb-4">Esta jornada ainda não foi finalizada.</p>
-                        <button
-                          onClick={() => {
-                            sessionStorage.setItem('tipoJornada', j.tipo);
-                            router.push('/professor/jornada');
-                          }}
-                          className="btn-primary text-sm"
-                        >
-                          Continuar jornada
-                        </button>
-                      </div>
-                    )}
+          <>
+            {/* Grafico de evolucao */}
+            {dadosEvolucao.length >= 2 && (
+              <div className="card animate-slide-up">
+                <h3 className="font-bold text-primary-950 mb-1">Sua evolução</h3>
+                <p className="text-xs text-primary-400 font-medium mb-4">Acompanhe seu progresso ao longo das jornadas</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={dadosEvolucao}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ece8e1" />
+                    <XAxis dataKey="data" tick={{ fontSize: 11, fill: '#9a9590' }} />
+                    <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 11, fill: '#9a9590' }} width={30} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        borderRadius: '16px',
+                        border: '1px solid #ece8e1',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'emocional') {
+                          const labels: Record<number, string> = { 1: 'Sobrecarregado', 2: 'Cansado', 3: 'Em alerta', 4: 'Esperançoso', 5: 'Fortalecido' };
+                          return [labels[value] || value, 'Estado emocional'];
+                        }
+                        const labels: Record<number, string> = { 1: 'Baixo', 2: 'Moderado', 3: 'Elevado' };
+                        return [labels[value] || value, 'Estresse'];
+                      }}
+                    />
+                    <Line type="monotone" dataKey="emocional" stroke="#2d7a5e" strokeWidth={2.5} dot={{ fill: '#2d7a5e', r: 4 }} name="emocional" />
+                    <Line type="monotone" dataKey="estresse" stroke="#c94040" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: '#c94040', r: 3 }} name="estresse" />
+                  </LineChart>
+                </ResponsiveContainer>
+                <div className="flex items-center justify-center gap-6 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-0.5 bg-primary-600 rounded-full" />
+                    <span className="text-xs text-primary-500 font-medium">Estado emocional</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-0.5 bg-[#c94040] rounded-full border-dashed" style={{ borderTop: '2px dashed #c94040', height: 0 }} />
+                    <span className="text-xs text-primary-500 font-medium">Estresse</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )}
+
+            {/* Timeline emocional */}
+            {concluidas.length >= 2 && (
+              <div className="card animate-slide-up" style={{ animationDelay: '0.05s' }}>
+                <h3 className="font-bold text-primary-950 mb-4 text-sm">Linha do tempo emocional</h3>
+                <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                  {concluidas.map((j, i) => {
+                    const perfil = perfisEmocional[j.diagnostico!.perfilEmocional];
+                    return (
+                      <div key={j.id} className="flex items-center">
+                        <div className="flex flex-col items-center min-w-[52px]">
+                          <span className="text-xl">{perfil?.emoji || '❓'}</span>
+                          <span className="text-[9px] text-primary-400 font-medium mt-1 text-center leading-tight">
+                            {formatarDataCurta(j.iniciadaEm)}
+                          </span>
+                        </div>
+                        {i < concluidas.length - 1 && (
+                          <div className="w-6 h-0.5 bg-primary-200 rounded-full flex-shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Lista de jornadas */}
+            <div className="stagger-children space-y-4">
+              {jornadas.map((j) => {
+                const aberta = expandida === j.id;
+                const perfil = j.diagnostico ? perfisEmocional[j.diagnostico.perfilEmocional] : null;
+
+                return (
+                  <div
+                    key={j.id}
+                    className="card transition-all duration-300 hover:shadow-warm-lg"
+                  >
+                    <button
+                      onClick={() => setExpandida(aberta ? null : j.id)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-2xl">
+                            {iconesTipo[j.tipo] || '📋'}
+                          </span>
+                          <div>
+                            <h3 className="font-bold text-primary-950">
+                              {nomesJornada[j.tipo] || j.tipo}
+                            </h3>
+                            <p className="text-xs text-primary-400 font-medium mt-0.5">{formatarData(j.iniciadaEm)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {j.status === 'concluida' ? (
+                            <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${coresTipo[j.tipo]}`}>
+                              Concluída
+                            </span>
+                          ) : (
+                            <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-warm-100 text-warm-600">
+                              Em andamento
+                            </span>
+                          )}
+                          <svg
+                            className={`w-4 h-4 text-primary-300 transition-transform duration-300 ${aberta ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        aberta ? 'max-h-[1000px] opacity-100 mt-5' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      {j.diagnostico && (
+                        <div className="pt-5 border-t border-primary-100/40 space-y-5">
+                          {/* Perfil emocional */}
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center">
+                              <span className="text-2xl">{perfil?.emoji}</span>
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-primary-950">{perfil?.label}</p>
+                              <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-xl mt-1 ${coresEstresse[j.diagnostico.nivelEstresse] || 'bg-warm-100 text-warm-600'}`}>
+                                Estresse: {j.diagnostico.nivelEstresse}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Resumo */}
+                          {j.diagnostico.resumoIA && (
+                            <div>
+                              <h4 className="text-sm font-bold text-primary-800 mb-2">Resumo</h4>
+                              <p className="text-sm text-warm-600 leading-relaxed">{j.diagnostico.resumoIA}</p>
+                            </div>
+                          )}
+
+                          {/* Pontos de atenção */}
+                          {j.diagnostico.pontosAtencao && (
+                            <div>
+                              <h4 className="text-sm font-bold text-primary-800 mb-2">Pontos de atenção</h4>
+                              <ul className="space-y-2">
+                                {(() => {
+                                  try {
+                                    return (JSON.parse(j.diagnostico.pontosAtencao) as string[]).map((p, i) => (
+                                      <li key={i} className="flex items-start gap-3 text-sm text-warm-600">
+                                        <span className="flex-shrink-0 w-5 h-5 rounded-lg bg-emotion-alert/10 flex items-center justify-center text-emotion-alert text-[10px] font-bold mt-0.5">
+                                          {i + 1}
+                                        </span>
+                                        <span className="leading-relaxed">{p}</span>
+                                      </li>
+                                    ));
+                                  } catch {
+                                    return null;
+                                  }
+                                })()}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Plano de ação */}
+                          {j.diagnostico.planoAcao && (
+                            <div className="bg-primary-50/60 rounded-2xl p-5 border border-primary-100/40">
+                              <h4 className="text-sm font-bold text-primary-800 mb-2">Recomendações</h4>
+                              <p className="text-sm text-primary-700 leading-relaxed whitespace-pre-wrap">
+                                {j.diagnostico.planoAcao}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!j.diagnostico && j.status === 'em_andamento' && (
+                        <div className="pt-5 border-t border-primary-100/40 text-center py-6">
+                          <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center mx-auto mb-3">
+                            <span className="text-lg">💬</span>
+                          </div>
+                          <p className="text-sm text-warm-500 mb-4">Esta jornada ainda não foi finalizada.</p>
+                          <button
+                            onClick={() => {
+                              sessionStorage.setItem('tipoJornada', j.tipo);
+                              router.push('/professor/jornada');
+                            }}
+                            className="btn-primary text-sm"
+                          >
+                            Continuar jornada
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </main>
     </div>

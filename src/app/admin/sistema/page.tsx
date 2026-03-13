@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import AdminNav from '@/components/AdminNav';
+import AdminLayout from '@/components/AdminLayout';
 
 interface SistemaInfo {
   banco: { status: string; tipo: string };
@@ -32,117 +31,131 @@ export default function SistemaPage() {
 
   if (carregando) {
     return (
-      <div className="min-h-screen bg-organic flex items-center justify-center">
-        <div className="text-center space-y-3 animate-fade-in">
-          <div className="w-10 h-10 border-3 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary-400 text-sm font-medium">Carregando...</p>
+      <AdminLayout titulo="Sistema" subtitulo="Informações e status do sistema">
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-[#2d7a5e] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-[#9a9590] text-sm font-medium">Carregando...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   if (!info) {
     return (
-      <div className="min-h-screen bg-organic flex items-center justify-center">
-        <div className="card text-center px-8 py-10 animate-fade-in">
-          <p className="text-warm-500 font-medium">Erro ao carregar informações.</p>
+      <AdminLayout titulo="Sistema" subtitulo="Informações e status do sistema">
+        <div className="flex items-center justify-center py-32">
+          <div className="bg-white rounded-2xl border border-[#ece8e1] px-8 py-10 text-center">
+            <p className="text-[#9a9590] font-medium">Erro ao carregar informações.</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-organic font-[Nunito]">
-      <Header titulo="EmpatIA — Sistema" subtitulo="Informações e status do sistema" />
-
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        <AdminNav />
-
-        <h2 className="text-lg font-bold text-primary-800">Visão Geral do Sistema</h2>
-
+    <AdminLayout titulo="Sistema" subtitulo="Informações e status do sistema">
+      <div className="space-y-6">
         {/* Status do Banco */}
-        <div className="card">
-          <h3 className="font-bold text-primary-700 text-sm mb-4 flex items-center gap-2">
-            <span className="text-lg">🗄️</span> Banco de Dados
+        <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+          <h3 className="font-bold text-[#2d2a26] text-[14px] mb-4 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#2d7a5e" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="10" cy="5" rx="7" ry="3" />
+              <path d="M3 5v5c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
+              <path d="M3 10v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5" />
+            </svg>
+            Banco de Dados
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40">
-              <p className="text-xs text-primary-500 font-bold uppercase tracking-wider">Status</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${info.banco.status === 'online' ? 'bg-green-400' : 'bg-red-400'}`} />
-                <p className="text-sm font-bold text-primary-800 capitalize">{info.banco.status}</p>
+            <div className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60">
+              <p className="text-[11px] text-[#9a9590] font-bold uppercase tracking-wider">Status</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${info.banco.status === 'online' ? 'bg-[#2d7a5e]' : 'bg-[#dc6b6b]'}`} />
+                <p className="text-[14px] font-bold text-[#2d2a26] capitalize">{info.banco.status}</p>
               </div>
             </div>
-            <div className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40">
-              <p className="text-xs text-primary-500 font-bold uppercase tracking-wider">Tipo</p>
-              <p className="text-sm font-bold text-primary-800 mt-1">{info.banco.tipo}</p>
+            <div className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60">
+              <p className="text-[11px] text-[#9a9590] font-bold uppercase tracking-wider">Tipo</p>
+              <p className="text-[14px] font-bold text-[#2d2a26] mt-1.5">{info.banco.tipo}</p>
             </div>
           </div>
         </div>
 
         {/* Totais */}
-        <div className="card">
-          <h3 className="font-bold text-primary-700 text-sm mb-4 flex items-center gap-2">
-            <span className="text-lg">📋</span> Totais
+        <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+          <h3 className="font-bold text-[#2d2a26] text-[14px] mb-4 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#2d7a5e" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="16" height="14" rx="2" />
+              <path d="M6 7h8M6 10h5M6 13h7" />
+            </svg>
+            Totais
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Professores', valor: info.totais.professores, icon: '👩‍🏫' },
-              { label: 'Escolas', valor: info.totais.escolas, icon: '🏫' },
-              { label: 'Jornadas', valor: info.totais.jornadas, icon: '🗺️' },
-              { label: 'Diagnósticos', valor: info.totais.diagnosticos, icon: '📊' },
+              { label: 'Professores', valor: info.totais.professores },
+              { label: 'Escolas', valor: info.totais.escolas },
+              { label: 'Jornadas', valor: info.totais.jornadas },
+              { label: 'Diagnósticos', valor: info.totais.diagnosticos },
             ].map((item) => (
-              <div key={item.label} className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40 text-center">
-                <span className="text-2xl">{item.icon}</span>
-                <p className="text-2xl font-extrabold text-primary-800 mt-1">{item.valor}</p>
-                <p className="text-xs text-primary-500 font-bold mt-0.5">{item.label}</p>
+              <div key={item.label} className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60 text-center">
+                <p className="text-2xl font-extrabold text-[#2d2a26]">{item.valor}</p>
+                <p className="text-[11px] text-[#9a9590] font-bold mt-0.5 uppercase tracking-wider">{item.label}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* IA */}
-        <div className="card">
-          <h3 className="font-bold text-primary-700 text-sm mb-4 flex items-center gap-2">
-            <span className="text-lg">🤖</span> Inteligência Artificial
+        <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+          <h3 className="font-bold text-[#2d2a26] text-[14px] mb-4 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#2d7a5e" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="10" cy="10" r="7" />
+              <path d="M10 6v4l2.5 2.5" />
+            </svg>
+            Inteligência Artificial
           </h3>
           <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40">
-              <p className="text-xs text-primary-500 font-bold uppercase tracking-wider">Modelo Padrão</p>
-              <p className="text-sm font-bold text-primary-800 mt-1">{info.ia.modelo}</p>
+            <div className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60">
+              <p className="text-[11px] text-[#9a9590] font-bold uppercase tracking-wider">Modelo Padrão</p>
+              <p className="text-[13px] font-bold text-[#2d2a26] mt-1.5">{info.ia.modelo}</p>
             </div>
-            <div className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40">
-              <p className="text-xs text-primary-500 font-bold uppercase tracking-wider">Configs Ativas</p>
-              <p className="text-2xl font-extrabold text-primary-800 mt-1">{info.ia.configsAtivas}</p>
-              <p className="text-xs text-primary-400">de {info.ia.totalConfigs} total</p>
+            <div className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60">
+              <p className="text-[11px] text-[#9a9590] font-bold uppercase tracking-wider">Configs Ativas</p>
+              <p className="text-2xl font-extrabold text-[#2d7a5e] mt-1">{info.ia.configsAtivas}</p>
+              <p className="text-[11px] text-[#b5b0a8] font-medium">de {info.ia.totalConfigs} total</p>
             </div>
-            <div className="bg-primary-50/60 rounded-2xl p-4 border border-primary-100/40">
-              <p className="text-xs text-primary-500 font-bold uppercase tracking-wider">Provider</p>
-              <p className="text-sm font-bold text-primary-800 mt-1">Anthropic Claude</p>
+            <div className="bg-[#faf8f5] rounded-xl p-4 border border-[#ece8e1]/60">
+              <p className="text-[11px] text-[#9a9590] font-bold uppercase tracking-wider">Provider</p>
+              <p className="text-[13px] font-bold text-[#2d2a26] mt-1.5">Anthropic Claude</p>
             </div>
           </div>
         </div>
 
         {/* Perguntas */}
-        <div className="card">
-          <h3 className="font-bold text-primary-700 text-sm mb-4 flex items-center gap-2">
-            <span className="text-lg">❓</span> Perguntas ({info.perguntas.total} total)
+        <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+          <h3 className="font-bold text-[#2d2a26] text-[14px] mb-4 flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#2d7a5e" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="10" cy="10" r="8" />
+              <path d="M7.5 7.5a2.5 2.5 0 014.6 1.3c0 1.7-2.6 1.7-2.6 3.2M10 15v-.5" />
+            </svg>
+            Perguntas ({info.perguntas.total} total)
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Trabalho', valor: info.perguntas.trabalho, cor: 'bg-blue-100 text-blue-700' },
-              { label: 'Estresse', valor: info.perguntas.estresse, cor: 'bg-orange-100 text-orange-700' },
-              { label: 'Relacionamentos', valor: info.perguntas.relacionamentos, cor: 'bg-purple-100 text-purple-700' },
-              { label: 'Finanças', valor: info.perguntas.financas, cor: 'bg-green-100 text-green-700' },
+              { label: 'Trabalho', valor: info.perguntas.trabalho },
+              { label: 'Estresse', valor: info.perguntas.estresse },
+              { label: 'Relacionamentos', valor: info.perguntas.relacionamentos },
+              { label: 'Finanças', valor: info.perguntas.financas },
             ].map((item) => (
-              <div key={item.label} className={`rounded-2xl p-4 text-center ${item.cor}`}>
-                <p className="text-2xl font-extrabold">{item.valor}</p>
-                <p className="text-xs font-bold mt-0.5">{item.label}</p>
+              <div key={item.label} className="bg-[#e8f5ee] rounded-xl p-4 text-center border border-[#c5e6d4]/50">
+                <p className="text-2xl font-extrabold text-[#2d7a5e]">{item.valor}</p>
+                <p className="text-[11px] text-[#4a6b5d] font-bold mt-0.5">{item.label}</p>
               </div>
             ))}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

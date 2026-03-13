@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import AdminNav from '@/components/AdminNav';
+import AdminLayout from '@/components/AdminLayout';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
+  LineChart, Line, CartesianGrid,
 } from 'recharts';
+
+interface Alerta {
+  tipo: 'critico' | 'aviso';
+  mensagem: string;
+}
 
 interface DadosDash {
   totalProfessores: number;
@@ -19,6 +24,11 @@ interface DadosDash {
   radarEstresse: { dimensao: string; valor: number }[];
   topProblemas: string[];
   ibedMedio: number;
+  duracaoMedia: number;
+  taxaRetorno7d: number;
+  taxaAbandono: number;
+  tendenciaConclusao: { semana: string; taxa: number; total: number }[];
+  alertas: Alerta[];
 }
 
 const CORES_EMOCIONAL: Record<string, string> = {
@@ -52,22 +62,26 @@ export default function AdminDashboard() {
 
   if (carregando) {
     return (
-      <div className="min-h-screen bg-organic flex items-center justify-center">
-        <div className="text-center space-y-3 animate-fade-in">
-          <div className="w-10 h-10 border-3 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary-400 text-sm font-medium font-[Nunito]">Carregando painel...</p>
+      <AdminLayout titulo="Dashboard" subtitulo="Visão geral da plataforma">
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-[#2d7a5e] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-[#9a9590] text-sm font-medium">Carregando painel...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   if (!dados) {
     return (
-      <div className="min-h-screen bg-organic flex items-center justify-center">
-        <div className="card text-center px-8 py-10 animate-fade-in">
-          <p className="text-warm-500 font-medium font-[Nunito]">Erro ao carregar dados.</p>
+      <AdminLayout titulo="Dashboard" subtitulo="Visão geral da plataforma">
+        <div className="flex items-center justify-center py-32">
+          <div className="bg-white rounded-2xl border border-[#ece8e1] px-8 py-10 text-center">
+            <p className="text-[#9a9590] font-medium">Erro ao carregar dados.</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
@@ -76,186 +90,257 @@ export default function AdminDashboard() {
     .map(([name, value]) => ({ name, value }));
 
   const abas = [
-    { id: 'visao_geral', label: 'Visao Geral', icon: '🏠' },
-    { id: 'estresse', label: 'Estresse', icon: '📊' },
-    { id: 'emocional', label: 'Perfil Emocional', icon: '💜' },
-    { id: 'problemas', label: 'Problemas', icon: '🔍' },
+    { id: 'visao_geral', label: 'Visão Geral' },
+    { id: 'estresse', label: 'Estresse' },
+    { id: 'emocional', label: 'Perfil Emocional' },
+    { id: 'tendencia', label: 'Tendências' },
+    { id: 'problemas', label: 'Problemas' },
   ];
 
   return (
-    <div className="min-h-screen bg-organic font-[Nunito]">
-      <Header titulo="EmpatIA — Painel de Gestao" subtitulo="Dashboard Administrativo" />
-
-      <main className="max-w-7xl mx-auto p-6 space-y-8">
-        <AdminNav />
-
-        {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 stagger-children">
-          <div className="bg-primary-50/60 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300">
-            <p className="text-xs text-primary-500 uppercase tracking-wider font-bold">Respondentes</p>
-            <p className="text-3xl font-extrabold text-primary-800 mt-2">{dados.totalProfessores}</p>
-            <p className="text-xs text-primary-400 mt-1">de {dados.totalProfessoresEscola} professores</p>
-          </div>
-          <div className="bg-primary-50/60 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300">
-            <p className="text-xs text-primary-500 uppercase tracking-wider font-bold">Jornadas</p>
-            <p className="text-3xl font-extrabold text-primary-800 mt-2">{dados.jornadasConcluidas}</p>
-            <p className="text-xs text-primary-400 mt-1">concluidas</p>
-          </div>
-          <div className="bg-primary-50/60 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300">
-            <p className="text-xs text-primary-500 uppercase tracking-wider font-bold">Taxa de Conclusao</p>
-            <p className="text-3xl font-extrabold text-primary-800 mt-2">{(dados.taxaConclusao * 100).toFixed(0)}%</p>
-          </div>
-          <div
-            className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300"
-            style={{ borderLeft: `4px solid ${dados.irpe.cor}` }}
-          >
-            <p className="text-xs text-primary-500 uppercase tracking-wider font-bold">IRPE</p>
-            <p className="text-3xl font-extrabold mt-2" style={{ color: dados.irpe.cor }}>
-              {dados.irpe.valor.toFixed(2)}
-            </p>
-            <p className="text-xs font-semibold mt-1" style={{ color: dados.irpe.cor }}>
-              Risco {dados.irpe.nivel}
-            </p>
-          </div>
-          <div className="bg-primary-50/60 backdrop-blur-sm rounded-3xl shadow-warm-sm border border-primary-100/50 p-5 animate-slide-up hover:shadow-warm transition-shadow duration-300">
-            <p className="text-xs text-primary-500 uppercase tracking-wider font-bold">IBED</p>
-            <p className="text-3xl font-extrabold text-primary-800 mt-2">{dados.ibedMedio.toFixed(2)}</p>
-            <p className="text-xs text-primary-400 mt-1">Bem-estar medio</p>
-          </div>
-        </div>
-
-        {/* Abas */}
-        <div className="flex flex-wrap gap-2 bg-primary-50/50 backdrop-blur-sm p-2 rounded-2xl w-fit border border-primary-100/30 shadow-warm-sm">
-          {abas.map((aba) => (
-            <button
-              key={aba.id}
-              onClick={() => setAbaAtiva(aba.id)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
-                abaAtiva === aba.id
-                  ? 'bg-primary-600 text-white shadow-warm shadow-glow'
-                  : 'text-primary-500 hover:text-primary-700 hover:bg-primary-100/60'
+    <AdminLayout titulo="Dashboard" subtitulo="Visão geral da plataforma">
+      {/* Alertas */}
+      {dados.alertas && dados.alertas.length > 0 && (
+        <div className="space-y-3 mb-6">
+          {dados.alertas.map((alerta, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-3 px-5 py-4 rounded-2xl border ${
+                alerta.tipo === 'critico'
+                  ? 'bg-red-50 border-red-200 text-red-800'
+                  : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}
             >
-              <span className="mr-1.5">{aba.icon}</span>
-              {aba.label}
-            </button>
+              <span className="text-lg flex-shrink-0">
+                {alerta.tipo === 'critico' ? '🚨' : '⚠️'}
+              </span>
+              <p className="text-sm font-medium">{alerta.mensagem}</p>
+            </div>
           ))}
         </div>
+      )}
 
-        {/* Conteudo das abas */}
-        <div className="animate-fade-in">
-          {abaAtiva === 'visao_geral' && (
-            <div className="grid lg:grid-cols-2 gap-6 stagger-children">
-              <div className="card animate-slide-up">
-                <h3 className="font-bold text-primary-800 mb-4 text-lg">Perfil Emocional da Escola</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {pieData.map((entry) => (
-                        <Cell key={entry.name} fill={CORES_EMOCIONAL[entry.name] || '#94a3b8'} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="card animate-slide-up">
-                <h3 className="font-bold text-primary-800 mb-4 text-lg">Radar de Estresse</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart data={dados.radarEstresse}>
-                    <PolarGrid stroke="#e2d5f0" />
-                    <PolarAngleAxis dataKey="dimensao" tick={{ fontSize: 11, fill: '#7c5caa' }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 10]} />
-                    <Radar name="Estresse" dataKey="valor" stroke="#a78bfa" fill="#a78bfa" fillOpacity={0.3} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        {[
+          { label: 'Respondentes', valor: dados.totalProfessores, sub: `de ${dados.totalProfessoresEscola} professores` },
+          { label: 'Jornadas', valor: dados.jornadasConcluidas, sub: 'concluídas' },
+          { label: 'Taxa Conclusão', valor: `${(dados.taxaConclusao * 100).toFixed(0)}%`, sub: null },
+          { label: 'IRPE', valor: dados.irpe.valor.toFixed(2), sub: `Risco ${dados.irpe.nivel}`, cor: dados.irpe.cor },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="bg-white rounded-2xl border border-[#ece8e1] p-5 hover:shadow-sm transition-shadow duration-200"
+            style={kpi.cor ? { borderLeft: `3px solid ${kpi.cor}` } : undefined}
+          >
+            <p className="text-[11px] text-[#9a9590] uppercase tracking-wider font-bold">{kpi.label}</p>
+            <p className="text-2xl font-extrabold text-[#2d2a26] mt-1.5" style={kpi.cor ? { color: kpi.cor } : undefined}>
+              {kpi.valor}
+            </p>
+            {kpi.sub && (
+              <p className="text-[11px] text-[#b5b0a8] mt-0.5 font-medium" style={kpi.cor ? { color: kpi.cor } : undefined}>
+                {kpi.sub}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
 
-          {abaAtiva === 'estresse' && (
-            <div className="card animate-slide-up">
-              <h3 className="font-bold text-primary-800 mb-4 text-lg">Estresse por Dimensao</h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={dados.radarEstresse} layout="vertical">
-                  <XAxis type="number" domain={[0, 10]} />
-                  <YAxis type="category" dataKey="dimensao" width={150} tick={{ fontSize: 12, fill: '#7c5caa' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      backdropFilter: 'blur(8px)',
-                      borderRadius: '16px',
-                      border: '1px solid rgba(167,139,250,0.3)',
-                      boxShadow: '0 4px 20px rgba(124,92,170,0.1)',
-                    }}
-                  />
-                  <Bar dataKey="valor" fill="#a78bfa" radius={[0, 12, 12, 0]} />
-                </BarChart>
+      {/* KPIs secundarios */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'IBED Médio', valor: dados.ibedMedio.toFixed(2), sub: 'Bem-estar' },
+          { label: 'Duração Média', valor: `${dados.duracaoMedia}min`, sub: 'por jornada' },
+          { label: 'Retorno 7 dias', valor: `${(dados.taxaRetorno7d * 100).toFixed(0)}%`, sub: 'voltaram em 7d' },
+          {
+            label: 'Taxa Abandono',
+            valor: `${(dados.taxaAbandono * 100).toFixed(0)}%`,
+            sub: 'não concluíram',
+            cor: dados.taxaAbandono > 0.3 ? '#f87171' : undefined,
+          },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="bg-white rounded-2xl border border-[#ece8e1] p-5 hover:shadow-sm transition-shadow duration-200"
+            style={kpi.cor ? { borderLeft: `3px solid ${kpi.cor}` } : undefined}
+          >
+            <p className="text-[11px] text-[#9a9590] uppercase tracking-wider font-bold">{kpi.label}</p>
+            <p className="text-2xl font-extrabold text-[#2d2a26] mt-1.5" style={kpi.cor ? { color: kpi.cor } : undefined}>
+              {kpi.valor}
+            </p>
+            {kpi.sub && (
+              <p className="text-[11px] text-[#b5b0a8] mt-0.5 font-medium">
+                {kpi.sub}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-white rounded-xl border border-[#ece8e1] p-1 w-fit mb-6 overflow-x-auto">
+        {abas.map((aba) => (
+          <button
+            key={aba.id}
+            onClick={() => setAbaAtiva(aba.id)}
+            className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-200 whitespace-nowrap ${
+              abaAtiva === aba.id
+                ? 'bg-[#2d7a5e] text-white shadow-sm'
+                : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-[#f5f3ef]'
+            }`}
+          >
+            {aba.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="animate-fade-in">
+        {abaAtiva === 'visao_geral' && (
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+              <h3 className="font-bold text-[#2d2a26] mb-4">Perfil Emocional da Escola</h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={95}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((entry) => (
+                      <Cell key={entry.name} fill={CORES_EMOCIONAL[entry.name] || '#94a3b8'} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                </PieChart>
               </ResponsiveContainer>
             </div>
-          )}
+            <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+              <h3 className="font-bold text-[#2d2a26] mb-4">Radar de Estresse</h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <RadarChart data={dados.radarEstresse}>
+                  <PolarGrid stroke="#e4e0d8" />
+                  <PolarAngleAxis dataKey="dimensao" tick={{ fontSize: 11, fill: '#7a7a72' }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 10]} />
+                  <Radar name="Estresse" dataKey="valor" stroke="#2d7a5e" fill="#2d7a5e" fillOpacity={0.15} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
-          {abaAtiva === 'emocional' && (
-            <div className="card animate-slide-up">
-              <h3 className="font-bold text-primary-800 mb-6 text-lg">Distribuicao Emocional</h3>
-              <div className="space-y-4">
-                {Object.entries(dados.distribuicaoEmocional).map(([estado, qtd]) => {
-                  const total = Object.values(dados.distribuicaoEmocional).reduce((a, b) => a + b, 0);
-                  const pct = total > 0 ? (qtd / total) * 100 : 0;
-                  return (
-                    <div key={estado} className="flex items-center gap-4">
-                      <span className="w-36 text-sm text-primary-700 font-semibold">{estado}</span>
-                      <div className="flex-1 bg-primary-50 rounded-full h-7 overflow-hidden border border-primary-100/50">
-                        <div
-                          className="h-full rounded-full transition-all duration-700 ease-out"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: CORES_EMOCIONAL[estado] || '#94a3b8',
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-primary-700 w-20 text-right">
-                        {qtd} ({pct.toFixed(0)}%)
-                      </span>
+        {abaAtiva === 'estresse' && (
+          <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+            <h3 className="font-bold text-[#2d2a26] mb-4">Estresse por Dimensão</h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={dados.radarEstresse} layout="vertical">
+                <XAxis type="number" domain={[0, 10]} />
+                <YAxis type="category" dataKey="dimensao" width={150} tick={{ fontSize: 12, fill: '#7a7a72' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    borderRadius: '12px',
+                    border: '1px solid #ece8e1',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  }}
+                />
+                <Bar dataKey="valor" fill="#2d7a5e" radius={[0, 8, 8, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {abaAtiva === 'emocional' && (
+          <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+            <h3 className="font-bold text-[#2d2a26] mb-6">Distribuição Emocional</h3>
+            <div className="space-y-4">
+              {Object.entries(dados.distribuicaoEmocional).map(([estado, qtd]) => {
+                const total = Object.values(dados.distribuicaoEmocional).reduce((a, b) => a + b, 0);
+                const pct = total > 0 ? (qtd / total) * 100 : 0;
+                return (
+                  <div key={estado} className="flex items-center gap-4">
+                    <span className="w-36 text-sm text-[#4a4842] font-semibold">{estado}</span>
+                    <div className="flex-1 bg-[#f5f3ef] rounded-full h-6 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${pct}%`, backgroundColor: CORES_EMOCIONAL[estado] || '#94a3b8' }}
+                      />
                     </div>
-                  );
-                })}
+                    <span className="text-sm font-bold text-[#4a4842] w-20 text-right">
+                      {qtd} ({pct.toFixed(0)}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {abaAtiva === 'tendencia' && (
+          <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+            <h3 className="font-bold text-[#2d2a26] mb-2">Tendência de Conclusão</h3>
+            <p className="text-[#9a9590] text-sm mb-6">Taxa de conclusão por semana (últimas 8 semanas)</p>
+            {dados.tendenciaConclusao && dados.tendenciaConclusao.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dados.tendenciaConclusao}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ece8e1" />
+                  <XAxis dataKey="semana" tick={{ fontSize: 11, fill: '#9a9590' }} />
+                  <YAxis
+                    domain={[0, 1]}
+                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                    tick={{ fontSize: 11, fill: '#9a9590' }}
+                    width={50}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      borderRadius: '12px',
+                      border: '1px solid #ece8e1',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: number, name: string) => {
+                      if (name === 'taxa') return [`${(value * 100).toFixed(0)}%`, 'Taxa conclusão'];
+                      return [value, 'Total jornadas'];
+                    }}
+                  />
+                  <Line type="monotone" dataKey="taxa" stroke="#2d7a5e" strokeWidth={2.5} dot={{ fill: '#2d7a5e', r: 4 }} />
+                  <Line type="monotone" dataKey="total" stroke="#9a9590" strokeWidth={1.5} strokeDasharray="5 5" dot={{ fill: '#9a9590', r: 3 }} yAxisId={0} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-[#9a9590] text-sm font-medium">Dados insuficientes para exibir tendência.</p>
+            )}
+          </div>
+        )}
+
+        {abaAtiva === 'problemas' && (
+          <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+            <h3 className="font-bold text-[#2d2a26] mb-6">Top 5 Problemas Recorrentes</h3>
+            {dados.topProblemas.length === 0 ? (
+              <p className="text-[#9a9590] text-sm font-medium">Nenhum dado disponível ainda.</p>
+            ) : (
+              <div className="space-y-2.5">
+                {dados.topProblemas.map((problema, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 p-4 bg-[#faf8f5] rounded-xl border border-[#ece8e1]/60 hover:border-[#d5d0c8] transition-colors duration-200"
+                  >
+                    <span className="w-8 h-8 bg-[#e8f5ee] text-[#2d7a5e] rounded-lg flex items-center justify-center text-sm font-extrabold shrink-0">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm text-[#2d2a26] font-medium">{problema}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
-
-          {abaAtiva === 'problemas' && (
-            <div className="card animate-slide-up">
-              <h3 className="font-bold text-primary-800 mb-6 text-lg">Top 5 Problemas Recorrentes</h3>
-              {dados.topProblemas.length === 0 ? (
-                <p className="text-primary-400 text-sm font-medium">Nenhum dado disponivel ainda.</p>
-              ) : (
-                <div className="space-y-3 stagger-children">
-                  {dados.topProblemas.map((problema, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-4 p-4 bg-primary-50/60 rounded-2xl border border-primary-100/40 hover:shadow-warm-sm transition-all duration-300 animate-slide-up"
-                    >
-                      <span className="w-9 h-9 bg-primary-200/60 text-primary-700 rounded-full flex items-center justify-center text-sm font-extrabold shrink-0">
-                        {i + 1}
-                      </span>
-                      <span className="text-sm text-primary-800 font-medium">{problema}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+            )}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
   );
 }

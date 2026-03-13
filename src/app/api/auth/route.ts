@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { login, hashSenha } from '@/lib/auth';
+import { login, hashSenha, getUsuarioLogado } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { loginSchema, registroSchema } from '@/lib/validations';
+
+// GET /api/auth - Dados do usuario logado
+export async function GET() {
+  try {
+    const usuario = await getUsuarioLogado();
+    if (!usuario) {
+      return NextResponse.json({ erro: 'Nao autorizado' }, { status: 401 });
+    }
+    return NextResponse.json({ nome: usuario.nome, email: usuario.email, role: usuario.role });
+  } catch {
+    return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
+  }
+}
 
 // POST /api/auth - Login ou Registro
 export async function POST(req: NextRequest) {

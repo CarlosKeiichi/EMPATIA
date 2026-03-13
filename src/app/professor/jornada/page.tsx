@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogoMini } from '@/components/Logo';
 
 interface Mensagem {
   role: 'user' | 'assistant';
@@ -20,6 +19,8 @@ export default function JornadaPage() {
   const [respostas, setRespostas] = useState<Record<string, string>[]>([]);
   const [erroInicio, setErroInicio] = useState('');
   const [finalizando, setFinalizando] = useState(false);
+  const [totalPerguntas, setTotalPerguntas] = useState(0);
+  const [nomeUsuario, setNomeUsuario] = useState('');
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -51,6 +52,14 @@ export default function JornadaPage() {
     if (!carregando) inputRef.current?.focus();
   }, [carregando]);
 
+  // Buscar nome do usuario
+  useEffect(() => {
+    fetch('/api/auth')
+      .then((r) => r.json())
+      .then((d) => { if (d.nome) setNomeUsuario(d.nome.split(' ')[0]); })
+      .catch(() => {});
+  }, []);
+
   // Iniciar jornada
   useEffect(() => {
     iniciarJornada();
@@ -59,6 +68,21 @@ export default function JornadaPage() {
 
   async function iniciarJornada() {
     try {
+      // Verificar se estamos continuando uma jornada aberta
+      const jornadaAbertaId = typeof window !== 'undefined' ? sessionStorage.getItem('jornadaAbertaId') : null;
+
+      if (jornadaAbertaId) {
+        // Continuando jornada existente — não precisa criar nova
+        sessionStorage.removeItem('jornadaAbertaId');
+        setJornadaId(jornadaAbertaId);
+
+        const contextoInicial = nomeUsuario
+          ? `O nome do professor(a) é ${nomeUsuario}. Ele(a) está retomando uma jornada que havia pausado. Cumprimente e acolha.`
+          : 'O professor(a) está retomando uma jornada que havia pausado. Acolha e continue.';
+        await enviarParaIA('Olá! Estou retomando minha jornada.', true, contextoInicial);
+        return;
+      }
+
       const res = await fetch('/api/jornada', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,16 +101,20 @@ export default function JornadaPage() {
       }
 
       if (data.jornada) setJornadaId(data.jornada.id);
+      if (data.perguntas?.length) setTotalPerguntas(data.perguntas.length);
 
       // Primeira mensagem da Márcia
-      await enviarParaIA('Olá! Estou pronto(a) para começar a jornada.', true);
+      const contextoInicial = nomeUsuario
+        ? `O nome do professor(a) é ${nomeUsuario}. Cumprimente pelo nome de forma acolhedora.`
+        : '';
+      await enviarParaIA('Olá! Estou pronto(a) para começar a jornada.', true, contextoInicial);
     } catch (error) {
       console.error('Erro ao iniciar jornada:', error);
       setErroInicio('Erro de conexão. Tente novamente.');
     }
   }
 
-  async function enviarParaIA(texto: string, primeiraMsg = false) {
+  async function enviarParaIA(texto: string, primeiraMsg = false, contextoExtra = '') {
     setCarregando(true);
 
     if (!primeiraMsg) {
@@ -94,6 +122,9 @@ export default function JornadaPage() {
     }
 
     try {
+      const contextoBase = `Jornada: ${tipoJornada}\nEstado emocional inicial: ${estadoInicial}\nEtapa: ${etapaAtual}`;
+      const contextoNome = nomeUsuario ? `\nNome do professor(a): ${nomeUsuario}` : '';
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,7 +132,7 @@ export default function JornadaPage() {
           conversaId,
           mensagem: texto,
           configIA,
-          contexto: `Jornada: ${tipoJornada}\nEstado emocional inicial: ${estadoInicial}\nEtapa: ${etapaAtual}`,
+          contexto: contextoBase + contextoNome + (contextoExtra ? `\n${contextoExtra}` : ''),
         }),
       });
 
@@ -146,6 +177,10 @@ export default function JornadaPage() {
     enviarParaIA(texto);
   }
 
+  // Detectar se a ultima mensagem da IA pede escala 0-10
+  const ultimaMsgIA = mensagens.filter((m) => m.role === 'assistant').slice(-1)[0];
+  const mostrarEscala = ultimaMsgIA && /(?:0\s*a\s*10|escala|nota|pontue|avalie.*número)/i.test(ultimaMsgIA.conteudo);
+
   async function finalizarJornada() {
     if (finalizando) return;
     setFinalizando(true);
@@ -179,6 +214,11 @@ export default function JornadaPage() {
     }
   }
 
+  // Progresso
+  const progresso = totalPerguntas > 0
+    ? Math.min((respostas.length / totalPerguntas) * 100, 100)
+    : 0;
+
   if (erroInicio) {
     return (
       <div className="min-h-screen bg-organic flex items-center justify-center p-4">
@@ -198,39 +238,54 @@ export default function JornadaPage() {
   return (
     <div className="min-h-screen flex flex-col bg-warm-50">
       {/* Header do chat */}
-      <header className="bg-white/70 backdrop-blur-md border-b border-primary-100/40 px-4 py-3.5 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center shadow-warm-sm">
-              <span className="text-sm font-bold text-primary-700">M</span>
+      <header className="bg-white/70 backdrop-blur-md border-b border-primary-100/40 px-4 py-3 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center shadow-warm-sm">
+                <span className="text-sm font-bold text-primary-700">M</span>
+              </div>
+              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ${coresJornada[tipoJornada || 'trabalho']} rounded-full border-2 border-white`} />
             </div>
-            <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ${coresJornada[tipoJornada || 'trabalho']} rounded-full border-2 border-white`} />
+            <div>
+              <h1 className="font-bold text-primary-950 text-sm">Márcia</h1>
+              <p className="text-xs text-primary-400 font-medium">
+                {nomesJornada[tipoJornada || ''] || 'Trabalho'}
+                {totalPerguntas > 0 && respostas.length > 0 && (
+                  <span className="ml-1 text-primary-300">· {respostas.length}/{totalPerguntas}</span>
+                )}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-primary-950 text-sm">Márcia</h1>
-            <p className="text-xs text-primary-400 font-medium">
-              Jornada: {nomesJornada[tipoJornada || ''] || 'Trabalho'}
-              {etapaAtual > 0 && <span className="ml-1 text-primary-300">· Etapa {etapaAtual}</span>}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {respostas.length >= 3 && (
+          <div className="flex items-center gap-2">
+            {respostas.length >= 3 && (
+              <button
+                onClick={finalizarJornada}
+                disabled={finalizando}
+                className="text-xs font-semibold bg-primary-50 text-primary-600 px-4 py-2 rounded-xl hover:bg-primary-100 hover:shadow-warm-sm transition-all duration-300 disabled:opacity-50"
+              >
+                {finalizando ? 'Finalizando...' : 'Finalizar jornada'}
+              </button>
+            )}
             <button
-              onClick={finalizarJornada}
-              disabled={finalizando}
-              className="text-xs font-semibold bg-primary-50 text-primary-600 px-4 py-2 rounded-xl hover:bg-primary-100 hover:shadow-warm-sm transition-all duration-300 disabled:opacity-50"
+              onClick={() => router.push('/professor')}
+              className="text-xs text-primary-400 hover:text-primary-600 font-medium px-2 py-1.5 transition-colors duration-300"
             >
-              {finalizando ? 'Finalizando...' : 'Finalizar jornada'}
+              Sair
             </button>
-          )}
-          <button
-            onClick={() => router.push('/professor')}
-            className="text-xs text-primary-400 hover:text-primary-600 font-medium px-2 py-1.5 transition-colors duration-300"
-          >
-            Sair
-          </button>
+          </div>
         </div>
+        {/* Barra de progresso */}
+        {totalPerguntas > 0 && respostas.length > 0 && (
+          <div className="mt-2.5">
+            <div className="h-1.5 bg-primary-100/60 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${progresso}%` }}
+              />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Mensagens */}
@@ -274,24 +329,26 @@ export default function JornadaPage() {
         )}
       </div>
 
-      {/* Escala rápida de 0-10 */}
-      <div className="px-4 pb-2 bg-warm-50">
-        <div className="flex gap-1.5 justify-center flex-wrap">
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-            <button
-              key={n}
-              onClick={() => selecionarEscala(n)}
-              disabled={carregando}
-              className="w-9 h-9 rounded-xl text-xs font-semibold border-2 border-primary-100/60 bg-white/70 backdrop-blur-sm hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 text-primary-600 transition-all duration-300 disabled:opacity-50 hover:shadow-warm-sm"
-            >
-              {n}
-            </button>
-          ))}
+      {/* Escala rápida de 0-10 — condicional */}
+      {mostrarEscala && (
+        <div className="px-4 pb-2 bg-warm-50 animate-slide-up">
+          <div className="flex gap-1.5 justify-center flex-wrap">
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <button
+                key={n}
+                onClick={() => selecionarEscala(n)}
+                disabled={carregando}
+                className="w-10 h-10 rounded-xl text-xs font-semibold border-2 border-primary-100/60 bg-white/70 backdrop-blur-sm hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 text-primary-600 transition-all duration-300 disabled:opacity-50 hover:shadow-warm-sm"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="text-center text-[10px] text-primary-300 mt-1.5 font-medium">
+            0 = não incomoda · 10 = muito grave
+          </p>
         </div>
-        <p className="text-center text-[10px] text-primary-300 mt-1.5 font-medium">
-          0 = não incomoda · 10 = muito grave
-        </p>
-      </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleEnviar} className="border-t border-primary-100/30 p-4 bg-white/70 backdrop-blur-md sticky bottom-0">

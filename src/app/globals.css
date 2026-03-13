@@ -73,3 +73,33 @@
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Print styles for PDF export */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print\:hidden { display: none !important; }
+  .print\:block { display: block !important; }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    backdrop-filter: none !important;
+    background: white !important;
+    break-inside: avoid;
+  }
+  .bg-organic {
+    background-image: none !important;
+  }
+  .animate-slide-up, .animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .stagger-children > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
