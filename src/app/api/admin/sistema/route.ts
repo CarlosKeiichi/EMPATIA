@@ -45,7 +45,7 @@ export async function GET() {
       diagnosticos: totalDiagnosticos,
     },
     ia: {
-      modelo: process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514',
+      modelo: process.env.CLAUDE_MODEL || 'claude-sonnet-4-6',
       configsAtivas,
       totalConfigs,
     },

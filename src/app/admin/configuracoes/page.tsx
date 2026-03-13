@@ -28,7 +28,7 @@ export default function ConfiguracoesPage() {
     nome: '',
     systemPrompt: '',
     temperatura: 0.7,
-    modelo: 'claude-sonnet-4-20250514',
+    modelo: 'claude-sonnet-4-6',
     descricao: '',
     ativo: true,
   });
@@ -69,7 +69,7 @@ export default function ConfiguracoesPage() {
       nome: '',
       systemPrompt: '',
       temperatura: 0.7,
-      modelo: 'claude-sonnet-4-20250514',
+      modelo: 'claude-sonnet-4-6',
       descricao: '',
       ativo: true,
     });
@@ -265,9 +265,9 @@ export default function ConfiguracoesPage() {
                   value={form.modelo}
                   onChange={(e) => setForm({ ...form, modelo: e.target.value })}
                 >
-                  <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                  <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
                   <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
-                  <option value="claude-opus-4-20250514">Claude Opus 4</option>
+                  <option value="claude-opus-4-6">Claude Opus 4.6</option>
                 </select>
               </div>
             </div>

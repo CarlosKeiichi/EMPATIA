@@ -154,7 +154,7 @@ model ConfiguracaoIA {
   nome            String   @unique // ex: "marcia_acolhimento", "marcia_jornada_trabalho"
   systemPrompt    String   // prompt do sistema
   temperatura     Float    @default(0.7)
-  modelo          String   @default("claude-sonnet-4-20250514")
+  modelo          String   @default("claude-sonnet-4-6")
   descricao       String?
   ativo           Boolean  @default(true)
   atualizadoEm    DateTime @updatedAt

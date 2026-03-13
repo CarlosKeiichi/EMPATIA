@@ -13,6 +13,16 @@ function getCliente(): Anthropic {
   return clienteAnthropic;
 }
 
+// Corrige modelos antigos/inválidos para IDs atuais
+function corrigirModelo(modelo: string): string {
+  const m = modelo.trim();
+  const mapeamento: Record<string, string> = {
+    'claude-sonnet-4-20250514': 'claude-sonnet-4-6',
+    'claude-opus-4-20250514': 'claude-opus-4-6',
+  };
+  return mapeamento[m] || m;
+}
+
 // Busca configuração da IA no banco (permite editar pelo admin)
 export async function getConfigIA(nome: string) {
   const config = await prisma.configuracaoIA.findUnique({ where: { nome } });
@@ -21,13 +31,13 @@ export async function getConfigIA(nome: string) {
     return {
       systemPrompt: 'Você é a Márcia, uma assistente virtual de saúde mental para professores. Seja empática e acolhedora.',
       temperatura: 0.7,
-      modelo: process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514',
+      modelo: corrigirModelo(process.env.CLAUDE_MODEL || 'claude-sonnet-4-6'),
     };
   }
   return {
     systemPrompt: config.systemPrompt,
     temperatura: config.temperatura,
-    modelo: config.modelo,
+    modelo: corrigirModelo(config.modelo),
   };
 }
 
@@ -145,7 +155,7 @@ export async function gerarRelatorioInstitucional(dadosAgregados: {
   const cliente = getCliente();
 
   const response = await cliente.messages.create({
-    model: process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514',
+    model: (process.env.CLAUDE_MODEL || 'claude-sonnet-4-6').trim(),
     max_tokens: 2048,
     temperature: 0.5,
     system: `Você é uma IA especialista em análise de saúde mental escolar.
