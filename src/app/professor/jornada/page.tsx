@@ -150,7 +150,8 @@ export default function JornadaPage() {
       const data = await res.json();
       if (data.conversaId) setConversaId(data.conversaId);
 
-      setMensagens((prev) => [...prev, { role: 'assistant', conteudo: data.resposta }]);
+      const textoResposta = data.resposta || data.erro || 'Desculpe, não consegui responder. Tente novamente.';
+      setMensagens((prev) => [...prev, { role: 'assistant', conteudo: textoResposta }]);
       setEtapaAtual((e) => e + 1);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
