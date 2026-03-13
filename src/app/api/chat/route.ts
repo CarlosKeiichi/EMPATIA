@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
           professorId: professor.id,
           tipo: configIA?.includes('jornada') ? 'jornada' : 'suporte',
         },
-        include: { mensagens: [] as never[] },
+        include: { mensagens: true },
       });
     }
 

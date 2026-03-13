@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
 
 interface ProfessorResumo {
   id: string;
@@ -39,17 +40,11 @@ export default function ProfessoresPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Professores</h1>
-            <p className="text-sm text-gray-500">Visão anonimizada dos respondentes</p>
-          </div>
-          <a href="/admin" className="text-sm text-primary-600 hover:underline">
-            Voltar ao painel
-          </a>
-        </div>
-      </header>
+      <Header titulo="Professores" subtitulo="Visão anonimizada dos respondentes">
+        <a href="/admin" className="text-sm text-primary-600 hover:underline">
+          Voltar ao painel
+        </a>
+      </Header>
 
       <main className="max-w-7xl mx-auto p-6">
         {carregando ? (

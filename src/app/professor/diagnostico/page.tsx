@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Header from '@/components/Header';
 
 interface Diagnostico {
   perfilEmocional: string;
@@ -60,13 +61,9 @@ export default function DiagnosticoPage() {
   const estresse = niveisEstresse[diagnostico.nivelEstresse] || niveisEstresse['moderado'];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2 pt-6">
-          <h1 className="text-2xl font-bold text-gray-800">Seu Retrato Emocional</h1>
-          <p className="text-gray-500 text-sm">Baseado nas suas respostas durante a jornada</p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header titulo="Seu Retrato Emocional" subtitulo="Diagnóstico personalizado" />
+      <div className="max-w-2xl mx-auto space-y-6 p-4">
 
         {/* Perfil Emocional */}
         <div className={`card border-2 ${perfil.cor} text-center`}>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Logo from '@/components/Logo';
 
 export default function HomePage() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function HomePage() {
       {/* Lado esquerdo - branding EmpatIA */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] p-12 flex-col justify-between text-white">
         <div className="flex items-center gap-4">
-          <Image src="/logos/logo-icone.png" alt="EmpatIA" width={48} height={48} className="rounded-lg" />
+          <Logo size={48} />
           <div>
             <h1 className="text-3xl font-bold">EmpatIA</h1>
             <p className="text-purple-300 mt-0.5 text-sm">Saúde Mental do Professor</p>
@@ -93,7 +93,7 @@ export default function HomePage() {
         <div className="w-full max-w-md">
           {/* Logo mobile */}
           <div className="lg:hidden mb-8 text-center">
-            <Image src="/logos/logo-completo.png" alt="EmpatIA" width={180} height={80} className="mx-auto mb-2" />
+            <Logo size={48} showText />
             <p className="text-gray-500 mt-1 text-sm">Saúde Mental do Professor</p>
           </div>
 
@@ -138,7 +138,7 @@ export default function HomePage() {
             <div className="mt-6 pt-4 border-t border-gray-100 text-center">
               <p className="text-sm text-gray-500">
                 Primeiro acesso?{' '}
-                <a href="/professor/perfil" className="text-[#7c6bab] font-medium hover:underline">
+                <a href="/cadastro" className="text-[#7c6bab] font-medium hover:underline">
                   Cadastre-se aqui
                 </a>
               </p>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Logo from '@/components/Logo';
 
 const jornadas = [
   {
@@ -56,7 +56,7 @@ export default function ProfessorHome() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center space-y-6">
-          <Image src="/logos/logo-icone.png" alt="EmpatIA" width={80} height={80} className="mx-auto rounded-2xl" />
+          <Logo size={80} className="mx-auto" />
 
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Olá! Eu sou a Márcia</h1>
@@ -153,12 +153,12 @@ export default function ProfessorHome() {
           ))}
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <button
-            onClick={() => router.push('/professor/diagnostico')}
+            onClick={() => router.push('/professor/historico')}
             className="text-sm text-gray-400 hover:text-gray-600 underline"
           >
-            Ver meus diagnósticos anteriores
+            Ver meu histórico de jornadas
           </button>
         </div>
       </div>

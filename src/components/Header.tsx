@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { LogoMini } from '@/components/Logo';
 
 interface HeaderProps {
   titulo?: string;
@@ -21,7 +21,7 @@ export default function Header({ titulo = 'EmpatIA', subtitulo, children }: Head
     <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sticky top-0 z-20">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Image src="/logos/logo-icone.png" alt="EmpatIA" width={32} height={32} className="rounded-lg" />
+          <LogoMini size={32} />
           <div>
             <h1 className="font-semibold text-gray-800 text-sm sm:text-base">{titulo}</h1>
             {subtitulo && <p className="text-xs text-gray-400">{subtitulo}</p>}
