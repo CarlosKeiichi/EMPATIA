@@ -32,6 +32,20 @@
   }
 }
 
+/* Chat markdown formatting */
+.prose-chat strong {
+  @apply font-bold text-primary-900;
+}
+.prose-chat em {
+  @apply italic;
+}
+.prose-chat ul {
+  @apply list-disc pl-4 my-1.5 space-y-0.5;
+}
+.prose-chat li {
+  @apply text-sm;
+}
+
 /* Typing animation */
 @keyframes typing {
   0%, 60%, 100% { opacity: 0.3; }

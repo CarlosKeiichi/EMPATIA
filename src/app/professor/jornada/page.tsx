@@ -8,6 +8,18 @@ interface Mensagem {
   conteudo: string;
 }
 
+function formatarMarkdown(texto: string): string {
+  return texto
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul class="list-disc pl-4 my-1">$1</ul>')
+    .replace(/\n/g, '<br />');
+}
+
 export default function JornadaPage() {
   const router = useRouter();
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
@@ -322,7 +334,7 @@ export default function JornadaPage() {
               </div>
             )}
             <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}>
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.conteudo}</p>
+              <div className="text-sm leading-relaxed prose-chat" dangerouslySetInnerHTML={{ __html: formatarMarkdown(msg.conteudo) }} />
             </div>
           </div>
         ))}
