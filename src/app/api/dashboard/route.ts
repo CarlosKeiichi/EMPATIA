@@ -3,10 +3,14 @@ import { getUsuarioLogado } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import {
   calcularIRPE,
+  calcularIRPR,
   calcularDistribuicaoEmocional,
   calcularRadarEstresse,
   extrairTopProblemas,
   calcularIBED,
+  calcularBurnoutRelacional,
+  calcularInteligenciaEmocional,
+  calcularEstiloComunicacao,
 } from '@/lib/scoring';
 
 // GET /api/dashboard - Dados do dashboard administrativo
@@ -21,10 +25,13 @@ export async function GET(req: NextRequest) {
     const admin = await prisma.admin.findUnique({ where: { userId: usuario.userId } });
     const escolaId = admin?.escolaId || req.nextUrl.searchParams.get('escolaId');
 
+    // Filtro por jornada (query param)
+    const jornadaFiltro = req.nextUrl.searchParams.get('jornada'); // 'trabalho' | 'relacionamentos' | 'financas' | null
+
     // Buscar jornadas concluídas
-    const filtro = escolaId
-      ? { status: 'concluida', professor: { escolaId } }
-      : { status: 'concluida' as const };
+    const filtro: Record<string, unknown> = { status: 'concluida' };
+    if (escolaId) filtro.professor = { escolaId };
+    if (jornadaFiltro) filtro.tipo = jornadaFiltro;
 
     const jornadas = await prisma.jornada.findMany({
       where: filtro,
@@ -63,10 +70,13 @@ export async function GET(req: NextRequest) {
     // IBED médio
     const ibedValues = jornadas
       .filter((j) => j.estadoEmocionalInicial && j.estadoEmocionalFinal)
-      .map((j) => calcularIBED(j.estadoEmocionalInicial!, j.estadoEmocionalFinal!).valor);
+      .map((j) => calcularIBED(j.estadoEmocionalInicial!, j.estadoEmocionalFinal!));
     const ibedMedio = ibedValues.length > 0
-      ? ibedValues.reduce((a, b) => a + b, 0) / ibedValues.length
+      ? ibedValues.reduce((a, b) => a + b.valor, 0) / ibedValues.length
       : 0.5;
+    const ibedDiferencaMedia = ibedValues.length > 0
+      ? ibedValues.reduce((a, b) => a + b.diferenca, 0) / ibedValues.length
+      : 0;
 
     // Estresse médio normalizado
     const pontuacoes = jornadas.map((j) => j.pontuacaoTotal ?? 0);
@@ -107,12 +117,12 @@ export async function GET(req: NextRequest) {
         const fim = new Date(j.concluidaEm!).getTime();
         return (fim - inicio) / (1000 * 60);
       })
-      .filter((d) => d > 0 && d < 180); // filtrar outliers (>3h)
+      .filter((d) => d > 0 && d < 180);
     const duracaoMedia = duracoes.length > 0
       ? Math.round(duracoes.reduce((a, b) => a + b, 0) / duracoes.length)
       : 0;
 
-    // Taxa retorno 7d: professores que fizeram >1 jornada com intervalo <=7 dias
+    // Taxa retorno 7d
     const jornadasPorProfessor = new Map<string, Date[]>();
     jornadas.forEach((j) => {
       const datas = jornadasPorProfessor.get(j.professorId) || [];
@@ -130,10 +140,10 @@ export async function GET(req: NextRequest) {
     });
     const taxaRetorno7d = totalProfessores > 0 ? retornantes7d / totalProfessores : 0;
 
-    // Taxa abandono: jornadas em_andamento iniciadas ha mais de 24h
-    const filtroAbandono = escolaId
-      ? { professor: { escolaId } }
-      : {};
+    // Taxa abandono
+    const filtroAbandono: Record<string, unknown> = {};
+    if (escolaId) filtroAbandono.professor = { escolaId };
+    if (jornadaFiltro) filtroAbandono.tipo = jornadaFiltro;
     const todasJornadas = await prisma.jornada.findMany({
       where: filtroAbandono,
       select: { status: true, iniciadaEm: true },
@@ -169,6 +179,103 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // === DADOS ESPECÍFICOS DE RELACIONAMENTOS ===
+    let irpr = null;
+    let ieMedia = null;
+    let distribuicaoEstiloComunicacao: Record<string, number> | null = null;
+    let percentualBurnoutElevado = null;
+
+    if (!jornadaFiltro || jornadaFiltro === 'relacionamentos') {
+      // Filtrar jornadas de relacionamentos
+      const jornadasRel = jornadaFiltro === 'relacionamentos'
+        ? jornadas
+        : jornadas.filter((j) => j.tipo === 'relacionamentos');
+
+      if (jornadasRel.length > 0) {
+        // Inteligência Emocional — respostas do bloco inteligencia_emocional_teste
+        const ieRespostas = jornadasRel.flatMap((j) =>
+          j.respostas
+            .filter((r) => r.bloco === 'inteligencia_emocional_teste')
+            .map((r) => parseInt(r.valor) || 0)
+        );
+
+        // IE por jornada (soma das 15 respostas)
+        const iePorJornada: number[] = [];
+        for (const j of jornadasRel) {
+          const respostasIE = j.respostas
+            .filter((r) => r.bloco === 'inteligencia_emocional_teste')
+            .map((r) => parseInt(r.valor) || 0);
+          if (respostasIE.length > 0) {
+            iePorJornada.push(respostasIE.reduce((a, b) => a + b, 0));
+          }
+        }
+        const ieMediaVal = iePorJornada.length > 0
+          ? iePorJornada.reduce((a, b) => a + b, 0) / iePorJornada.length
+          : 45; // default média
+        const ieResult = calcularInteligenciaEmocional(Math.round(ieMediaVal));
+        ieMedia = { ...ieResult, media: ieMediaVal };
+
+        // Estilo de Comunicação
+        const comRespostas = jornadasRel.flatMap((j) =>
+          j.respostas
+            .filter((r) => r.bloco === 'estilo_comunicacao')
+            .map((r) => r.valor)
+        );
+        if (comRespostas.length > 0) {
+          const estiloResult = calcularEstiloComunicacao(comRespostas);
+          distribuicaoEstiloComunicacao = estiloResult.distribuicao;
+        }
+
+        // Burnout Relacional
+        const burnoutPorJornada: number[] = [];
+        for (const j of jornadasRel) {
+          const respostasBurnout = j.respostas
+            .filter((r) => r.bloco === 'burnout_relacional_teste')
+            .map((r) => r.pontuacao ?? 0);
+          if (respostasBurnout.length > 0) {
+            burnoutPorJornada.push(respostasBurnout.reduce((a, b) => a + b, 0));
+          }
+        }
+        const burnoutElevados = burnoutPorJornada.filter((p) => p > 18).length;
+        percentualBurnoutElevado = burnoutPorJornada.length > 0
+          ? burnoutElevados / burnoutPorJornada.length
+          : 0;
+
+        // Calcular estresse normalizado para relacionamentos
+        const respostasRelEstresse = jornadasRel.flatMap((j) =>
+          j.respostas
+            .filter((r) => ['autocuidado', 'vinculos_familiares', 'rede_apoio', 'satisfacao_geral'].includes(r.bloco))
+            .map((r) => r.pontuacao ?? 0)
+        );
+        const estresseRelNorm = respostasRelEstresse.length > 0
+          ? respostasRelEstresse.reduce((a, b) => a + b, 0) / respostasRelEstresse.length / 10
+          : 0;
+
+        // % não assertivo e % passivo predominante
+        const totalRel = jornadasRel.length;
+        let naoAssertivos = 0;
+        let passivoPredominante = 0;
+        for (const j of jornadasRel) {
+          const respostasCom = j.respostas
+            .filter((r) => r.bloco === 'estilo_comunicacao')
+            .map((r) => r.valor);
+          if (respostasCom.length > 0) {
+            const estilo = calcularEstiloComunicacao(respostasCom);
+            if (estilo.predominante !== 'assertivo') naoAssertivos++;
+            if (estilo.predominante === 'passivo') passivoPredominante++;
+          }
+        }
+
+        // IRPR
+        irpr = calcularIRPR({
+          ieNormalizada: (ieMediaVal - 15) / 60, // normalizar 15-75 para 0-1
+          estresseNormalizado: estresseRelNorm,
+          percentualNaoAssertivo: totalRel > 0 ? naoAssertivos / totalRel : 0,
+          percentualPassivoPredominante: totalRel > 0 ? passivoPredominante / totalRel : 0,
+        });
+      }
+    }
+
     // === ALERTAS ===
     const alertas: { tipo: 'critico' | 'aviso'; mensagem: string }[] = [];
 
@@ -176,6 +283,12 @@ export async function GET(req: NextRequest) {
       alertas.push({ tipo: 'critico', mensagem: `IRPE crítico (${irpe.valor.toFixed(2)}) — risco elevado de esgotamento no corpo docente` });
     } else if (irpe.valor > 0.6) {
       alertas.push({ tipo: 'aviso', mensagem: `IRPE em alerta (${irpe.valor.toFixed(2)}) — atenção ao bem-estar dos professores` });
+    }
+
+    if (irpr && irpr.valor > 0.8) {
+      alertas.push({ tipo: 'critico', mensagem: `IRPR crítico (${irpr.valor.toFixed(2)}) — risco relacional elevado` });
+    } else if (irpr && irpr.valor > 0.6) {
+      alertas.push({ tipo: 'aviso', mensagem: `IRPR em alerta (${irpr.valor.toFixed(2)}) — atenção às relações interpessoais` });
     }
 
     if (percentualCriticos > 0.3) {
@@ -199,12 +312,17 @@ export async function GET(req: NextRequest) {
       radarEstresse,
       topProblemas,
       ibedMedio,
-      // Novas metricas
+      ibedDiferencaMedia,
       duracaoMedia,
       taxaRetorno7d,
       taxaAbandono,
       tendenciaConclusao,
       alertas,
+      // Dados de relacionamentos
+      irpr,
+      ieMedia,
+      distribuicaoEstiloComunicacao,
+      percentualBurnoutElevado,
     });
   } catch (error) {
     console.error('Erro no dashboard:', error);

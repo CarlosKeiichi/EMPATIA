@@ -86,34 +86,132 @@ export function calcularIRPE(dados: {
   return { valor: valorFinal, nivel, cor };
 }
 
-// IBED — Índice de Bem-Estar Docente
+// IBED — Índice de Bem-Estar Docente (escala 1-5)
 export function calcularIBED(estadoInicial: string, estadoFinal: string): {
-  valor: number;
+  valorInicial: number;
+  valorFinal: number;
+  diferenca: number;
   evolucao: string;
+  valor: number; // mantém compatibilidade (valorFinal normalizado 0-1)
 } {
   const mapaEstados: Record<string, number> = {
-    A: 1.0, // Muito fortalecido
-    B: 0.75, // Esperançoso
-    C: 0.5, // Em alerta
-    D: 0.25, // Cansado
-    E: 0.0, // Sobrecarregado
+    A: 5, // Muito fortalecido
+    B: 4, // Consciente e esperançoso
+    C: 3, // Em equilíbrio, mas em alerta
+    D: 2, // Cansado
+    E: 1, // Sobrecarregado
   };
 
-  const inicial = mapaEstados[estadoInicial] ?? 0.5;
-  const final_ = mapaEstados[estadoFinal] ?? 0.5;
+  const valorInicial = mapaEstados[estadoInicial] ?? 3;
+  const valorFinal = mapaEstados[estadoFinal] ?? 3;
+  const diferenca = valorFinal - valorInicial; // -4 a +4
 
-  const valor = final_;
   let evolucao: string;
-
-  if (final_ > inicial) {
+  if (diferenca > 0) {
     evolucao = 'positiva';
-  } else if (final_ < inicial) {
+  } else if (diferenca < 0) {
     evolucao = 'regressão';
   } else {
     evolucao = 'estabilidade';
   }
 
-  return { valor, evolucao };
+  return {
+    valorInicial,
+    valorFinal,
+    diferenca,
+    evolucao,
+    valor: (valorFinal - 1) / 4, // normalizado 0-1 para compatibilidade com IRPE
+  };
+}
+
+// IRPR — Índice Relacional de Professores e Rede
+export function calcularIRPR(dados: {
+  ieNormalizada: number; // 0-1 (inteligência emocional normalizada)
+  estresseNormalizado: number; // 0-1
+  percentualNaoAssertivo: number; // 0-1
+  percentualPassivoPredominante: number; // 0-1
+}): {
+  valor: number;
+  nivel: string;
+  cor: string;
+} {
+  const irpr =
+    (1 - dados.ieNormalizada) * 0.3 +
+    dados.estresseNormalizado * 0.3 +
+    dados.percentualNaoAssertivo * 0.3 +
+    dados.percentualPassivoPredominante * 0.1;
+
+  const valorFinal = Math.max(0, Math.min(1, irpr));
+
+  let nivel: string;
+  let cor: string;
+
+  if (valorFinal < 0.3) {
+    nivel = 'baixo';
+    cor = '#22c55e';
+  } else if (valorFinal < 0.6) {
+    nivel = 'moderado';
+    cor = '#f59e0b';
+  } else if (valorFinal < 0.8) {
+    nivel = 'alto';
+    cor = '#f97316';
+  } else {
+    nivel = 'crítico';
+    cor = '#ef4444';
+  }
+
+  return { valor: valorFinal, nivel, cor };
+}
+
+// Inteligência Emocional — 15 questões, escala 1-5 (total 15-75)
+export function calcularInteligenciaEmocional(pontuacaoTotal: number): {
+  pontuacao: number;
+  classificacao: string;
+  nivel: string;
+} {
+  let classificacao: string;
+  let nivel: string;
+
+  if (pontuacaoTotal <= 34) {
+    classificacao = 'Baixa inteligência emocional';
+    nivel = 'baixa';
+  } else if (pontuacaoTotal <= 54) {
+    classificacao = 'Inteligência emocional média';
+    nivel = 'media';
+  } else {
+    classificacao = 'Alta inteligência emocional';
+    nivel = 'alta';
+  }
+
+  return { pontuacao: pontuacaoTotal, classificacao, nivel };
+}
+
+// Estilo de Comunicação — 5 situações, 4 estilos possíveis
+export function calcularEstiloComunicacao(respostas: string[]): {
+  predominante: string;
+  distribuicao: Record<string, number>;
+} {
+  const estilos = ['assertivo', 'passivo', 'agressivo', 'passivo_agressivo'];
+  const distribuicao: Record<string, number> = {};
+  for (const e of estilos) distribuicao[e] = 0;
+
+  for (const r of respostas) {
+    const estilo = r.toLowerCase().replace('-', '_');
+    if (distribuicao[estilo] !== undefined) {
+      distribuicao[estilo]++;
+    }
+  }
+
+  let predominante = 'assertivo';
+  let max = 0;
+  for (const [estilo, count] of Object.entries(distribuicao)) {
+    if (count > max) {
+      max = count;
+      predominante = estilo;
+    }
+  }
+
+  return { predominante, distribuicao };
 }
 
 // Extrai top problemas das respostas
@@ -153,9 +251,15 @@ function formatarNomeBloco(bloco: string): string {
     alunos: 'Alunos',
     atividade_docente: 'Atividade Docente',
     autocuidado: 'Autocuidado',
+    vinculos_familiares: 'Vínculos Familiares',
+    rede_apoio: 'Rede de Apoio',
+    satisfacao_geral: 'Satisfação Geral',
     relacoes_interpessoais: 'Relações',
     inteligencia_emocional: 'Intelig. Emocional',
+    inteligencia_emocional_teste: 'IE (Teste)',
     burnout_relacional: 'Burnout Relacional',
+    burnout_relacional_teste: 'Burnout Relacional',
+    estilo_comunicacao: 'Estilo Comunicação',
     comunicacao: 'Comunicação',
     pressao_financeira: 'Pressão Financeira',
     organizacao_financeira: 'Organização',
