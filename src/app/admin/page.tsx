@@ -106,12 +106,12 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   if (!active || !payload?.length) return null;
   return (
     <div className="admin-tooltip">
-      {label && <p className="text-[11px] text-[#9a9590] font-semibold mb-1">{label}</p>}
+      {label && <p className="text-[11px] text-white/50 font-semibold mb-1.5">{label}</p>}
       {payload.map((p, i) => (
-        <p key={i} className="text-[13px] font-bold text-[#2d2a26]">
-          <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: p.color || '#2d7a5e' }} />
+        <p key={i} className="text-[13px] font-bold text-white">
+          <span className="inline-block w-2 h-2 rounded-full mr-1.5 ring-2 ring-white/20" style={{ backgroundColor: p.color || '#34d399' }} />
           {p.name === 'taxa' ? `${(p.value * 100).toFixed(0)}%` : p.value}
-          <span className="text-[#b5b0a8] font-medium ml-1 text-[11px]">
+          <span className="text-white/40 font-medium ml-1 text-[11px]">
             {p.name === 'taxa' ? 'conclusao' : p.name === 'total' ? 'jornadas' : ''}
           </span>
         </p>
@@ -134,25 +134,33 @@ function IndexGauge({ valor, nivel, cor, label, gradientId }: { valor: number; n
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#34d399" />
-            <stop offset="40%" stopColor="#fbbf24" />
-            <stop offset="70%" stopColor="#fb923c" />
+            <stop offset="35%" stopColor="#a3e635" />
+            <stop offset="55%" stopColor="#fbbf24" />
+            <stop offset="75%" stopColor="#fb923c" />
             <stop offset="100%" stopColor="#ef4444" />
           </linearGradient>
+          <filter id={`${gradientId}Glow`}>
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
+        {/* Background arc */}
         <path
           d="M 10 55 A 40 40 0 0 1 90 55"
           fill="none"
           stroke="#f0ede8"
-          strokeWidth="7"
+          strokeWidth="8"
           strokeLinecap="round"
         />
+        {/* Colored arc */}
         <path
           d="M 10 55 A 40 40 0 0 1 90 55"
           fill="none"
           stroke={`url(#${gradientId})`}
-          strokeWidth="7"
+          strokeWidth="8"
           strokeLinecap="round"
         />
+        {/* Needle with glow */}
         <line
           x1="50"
           y1="55"
@@ -161,10 +169,11 @@ function IndexGauge({ valor, nivel, cor, label, gradientId }: { valor: number; n
           stroke={cor}
           strokeWidth="2.5"
           strokeLinecap="round"
+          filter={`url(#${gradientId}Glow)`}
         />
-        <circle cx="50" cy="55" r="3.5" fill={cor} />
+        <circle cx="50" cy="55" r="4" fill="white" stroke={cor} strokeWidth="2" />
       </svg>
-      <div className="text-center -mt-1">
+      <div className="text-center mt-0.5">
         <p className="text-3xl font-black tracking-tight" style={{ color: cor }}>{valor.toFixed(2)}</p>
         <p className="text-[11px] font-bold uppercase tracking-widest mt-0.5" style={{ color: cor }}>
           {label} {nivel}
@@ -183,28 +192,32 @@ function KPICard({ label, valor, sub, cor, icon, trend }: {
   icon: React.ReactNode;
   trend?: 'up' | 'down' | 'neutral';
 }) {
+  const accent = cor || '#2d7a5e';
   return (
-    <div className="admin-card group hover:shadow-md transition-all duration-300">
+    <div className="admin-card group">
       <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: cor ? `${cor}18` : '#e8f5ee' }}>
-          <span style={{ color: cor || '#2d7a5e' }}>{icon}</span>
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${accent}12, ${accent}22)` }}
+        >
+          <span style={{ color: accent }}>{icon}</span>
         </div>
         {trend && (
-          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-            trend === 'up' ? 'bg-emerald-50 text-emerald-600' :
-            trend === 'down' ? 'bg-red-50 text-red-500' :
-            'bg-gray-50 text-gray-400'
+          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${
+            trend === 'up' ? 'bg-emerald-50/80 text-emerald-600 ring-1 ring-emerald-200/50' :
+            trend === 'down' ? 'bg-red-50/80 text-red-500 ring-1 ring-red-200/50' :
+            'bg-gray-50/80 text-gray-400 ring-1 ring-gray-200/50'
           }`}>
             {trend === 'up' ? '\u2191' : trend === 'down' ? '\u2193' : '\u2014'}
           </span>
         )}
       </div>
       <p className="text-[11px] text-[#9a9590] uppercase tracking-wider font-bold">{label}</p>
-      <p className="text-[28px] font-black text-[#2d2a26] mt-0.5 leading-none tracking-tight" style={cor ? { color: cor } : undefined}>
+      <p className="text-[28px] font-black mt-0.5 leading-none tracking-tight" style={{ color: accent }}>
         {valor}
       </p>
       {sub && (
-        <p className="text-[11.5px] text-[#b5b0a8] mt-1 font-medium">
+        <p className="text-[11.5px] text-[#b5b0a8] mt-1.5 font-medium">
           {sub}
         </p>
       )}
@@ -234,8 +247,13 @@ function ChartCard({ title, subtitle, children, className = '' }: {
 function InsightBanner({ message, cor }: { message: string; cor: string }) {
   return (
     <div
-      className="mt-3 px-4 py-2.5 rounded-xl text-[12px] font-semibold leading-snug"
-      style={{ backgroundColor: `${cor}12`, color: cor, borderLeft: `3px solid ${cor}` }}
+      className="mt-3 px-4 py-3 rounded-xl text-[12px] font-semibold leading-snug backdrop-blur-sm"
+      style={{
+        background: `linear-gradient(135deg, ${cor}10, ${cor}18)`,
+        color: cor,
+        borderLeft: `3px solid ${cor}`,
+        boxShadow: `0 2px 8px ${cor}08`,
+      }}
     >
       {message}
     </div>
@@ -311,16 +329,17 @@ export default function AdminDashboard() {
   return (
     <AdminLayout titulo="Dashboard" subtitulo="Visao geral da plataforma">
       {/* Abas de jornada */}
-      <div className="flex gap-1 bg-white rounded-xl border border-[#ece8e1] p-1 w-fit mb-6">
+      <div className="flex gap-1 rounded-xl p-1 w-fit mb-6" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(45,42,38,0.04)' }}>
         {ABAS.map((aba) => (
           <button
             key={aba.id}
             onClick={() => setAbaAtiva(aba.id)}
-            className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-200 ${
+            className={`px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${
               abaAtiva === aba.id
-                ? 'bg-[#2d7a5e] text-white shadow-sm'
-                : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-[#f5f3ef]'
+                ? 'text-white shadow-md'
+                : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-white/50'
             }`}
+            style={abaAtiva === aba.id ? { background: 'linear-gradient(135deg, #2d7a5e, #34d399)' } : undefined}
           >
             {aba.label}
           </button>
@@ -380,7 +399,7 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
   return (
     <>
       {/* KPI Row 1 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 stagger-children">
         <KPICard
           label="Respondentes"
           valor={dados.totalProfessores}
@@ -412,7 +431,7 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
       </div>
 
       {/* KPI Row 2 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7 stagger-children">
         <KPICard
           label="Duracao Media"
           valor={`${dados.duracaoMedia}min`}
@@ -443,21 +462,27 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
       </div>
 
       {/* Main charts row */}
-      <div className="grid lg:grid-cols-5 gap-4 mb-4">
+      <div className="grid lg:grid-cols-5 gap-4 mb-4 stagger-children">
         <ChartCard title="Perfil Emocional" subtitle="Distribuicao dos professores" className="lg:col-span-3">
           <div className="flex flex-col lg:flex-row items-center gap-6">
             <div className="w-full lg:w-[45%]">
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
+                  <defs>
+                    <filter id="pieShadow">
+                      <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.08" />
+                    </filter>
+                  </defs>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
                     outerRadius={90}
-                    paddingAngle={3}
+                    paddingAngle={4}
                     dataKey="value"
-                    strokeWidth={0}
+                    stroke="rgba(255,255,255,0.8)"
+                    strokeWidth={2}
                   >
                     {pieData.map((entry) => (
                       <Cell key={entry.name} fill={CORES_EMOCIONAL[entry.name] || '#94a3b8'} />
@@ -486,12 +511,13 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
                         {qtd} <span className="text-[#b5b0a8] font-semibold">({pct.toFixed(0)}%)</span>
                       </span>
                     </div>
-                    <div className="h-2 bg-[#f5f3ef] rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[#f5f3ef] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-1000 ease-out"
                         style={{
                           width: `${pct}%`,
-                          backgroundColor: CORES_EMOCIONAL[estado] || '#94a3b8',
+                          background: `linear-gradient(90deg, ${CORES_EMOCIONAL[estado] || '#94a3b8'}, ${CORES_EMOCIONAL[estado] || '#94a3b8'}cc)`,
+                          boxShadow: `0 0 8px ${CORES_EMOCIONAL[estado] || '#94a3b8'}30`,
                         }}
                       />
                     </div>
@@ -505,6 +531,12 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
         <ChartCard title="Radar de Estresse" subtitle="Pontuacao por dimensao" className="lg:col-span-2">
           <ResponsiveContainer width="100%" height={250}>
             <RadarChart data={dados.radarEstresse} cx="50%" cy="50%" outerRadius="72%">
+              <defs>
+                <radialGradient id="radarGradGreen" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#34d399" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#2d7a5e" stopOpacity={0.06} />
+                </radialGradient>
+              </defs>
               <PolarGrid stroke="#e4e0d8" strokeDasharray="3 3" />
               <PolarAngleAxis
                 dataKey="dimensao"
@@ -515,10 +547,10 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
                 name="Estresse"
                 dataKey="valor"
                 stroke="#2d7a5e"
-                fill="#2d7a5e"
-                fillOpacity={0.12}
-                strokeWidth={2}
-                dot={{ r: 3, fill: '#2d7a5e', strokeWidth: 0 }}
+                fill="url(#radarGradGreen)"
+                fillOpacity={1}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: '#fff', stroke: '#2d7a5e', strokeWidth: 2 }}
               />
             </RadarChart>
           </ResponsiveContainer>
@@ -526,16 +558,21 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
       </div>
 
       {/* Second charts row */}
-      <div className="grid lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid lg:grid-cols-2 gap-4 mb-4 stagger-children">
         <ChartCard title="Tendencia de Conclusao" subtitle="Taxa semanal nas ultimas 8 semanas">
           {dados.tendenciaConclusao && dados.tendenciaConclusao.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={dados.tendenciaConclusao}>
                 <defs>
                   <linearGradient id="gradientConclusao" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2d7a5e" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#2d7a5e" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#34d399" stopOpacity={0.28} />
+                    <stop offset="50%" stopColor="#2d7a5e" stopOpacity={0.1} />
+                    <stop offset="100%" stopColor="#2d7a5e" stopOpacity={0} />
                   </linearGradient>
+                  <filter id="glowGreen">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" vertical={false} />
                 <XAxis
@@ -560,7 +597,7 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
                   strokeWidth={2.5}
                   fill="url(#gradientConclusao)"
                   dot={{ fill: '#fff', stroke: '#2d7a5e', strokeWidth: 2, r: 4 }}
-                  activeDot={{ fill: '#2d7a5e', stroke: '#fff', strokeWidth: 2, r: 6 }}
+                  activeDot={{ fill: '#2d7a5e', stroke: '#fff', strokeWidth: 3, r: 7, filter: 'url(#glowGreen)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -576,8 +613,9 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
             <BarChart data={dados.radarEstresse} layout="vertical" barCategoryGap={8}>
               <defs>
                 <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#2d7a5e" />
-                  <stop offset="100%" stopColor="#34d399" />
+                  <stop offset="0%" stopColor="#2d7a5e" stopOpacity={0.9} />
+                  <stop offset="60%" stopColor="#34d399" stopOpacity={0.85} />
+                  <stop offset="100%" stopColor="#6ee7b7" stopOpacity={0.7} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -608,7 +646,7 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
       </div>
 
       {/* Bottom row */}
-      <div className="grid lg:grid-cols-5 gap-4">
+      <div className="grid lg:grid-cols-5 gap-4 stagger-children">
         <ChartCard title="Problemas Recorrentes" subtitle="Top 5 mais reportados" className="lg:col-span-3">
           {dados.topProblemas.length === 0 ? (
             <div className="flex items-center justify-center h-[200px] text-[#b5b0a8] text-sm font-medium">
@@ -678,13 +716,19 @@ function DashboardGeralTrabalho({ dados, totalEmocional, pieData, abaAtiva, carr
             <p className="text-[11px] text-[#9a9590] uppercase tracking-wider font-bold mb-2">Engajamento Geral</p>
             <div className="relative w-20 h-20 mx-auto mb-2">
               <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <defs>
+                  <linearGradient id="engajGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#2d7a5e" />
+                    <stop offset="100%" stopColor="#34d399" />
+                  </linearGradient>
+                </defs>
                 <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f0ede8" strokeWidth="3" />
                 <circle
                   cx="18"
                   cy="18"
                   r="15.5"
                   fill="none"
-                  stroke="#2d7a5e"
+                  stroke="url(#engajGrad)"
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={`${dados.taxaConclusao * 97.4} 97.4`}
@@ -731,7 +775,7 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
   return (
     <>
       {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 stagger-children">
         <KPICard
           label="Respondentes"
           valor={dados.totalProfessores}
@@ -763,7 +807,7 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
       </div>
 
       {/* IRPR Gauge + Radar Relacional */}
-      <div className="grid lg:grid-cols-5 gap-4 mb-4">
+      <div className="grid lg:grid-cols-5 gap-4 mb-4 stagger-children">
         <ChartCard title="IRPR" subtitle="Indice Relacional de Professores e Rede" className="lg:col-span-2">
           {dados.irpr ? (
             <div>
@@ -781,6 +825,12 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
           {radarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="72%">
+                <defs>
+                  <radialGradient id="radarGradPurple" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.06} />
+                  </radialGradient>
+                </defs>
                 <PolarGrid stroke="#e4e0d8" strokeDasharray="3 3" />
                 <PolarAngleAxis
                   dataKey="dimensao"
@@ -791,10 +841,10 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
                   name="Estresse"
                   dataKey="valor"
                   stroke="#8b5cf6"
-                  fill="#8b5cf6"
-                  fillOpacity={0.12}
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: '#8b5cf6', strokeWidth: 0 }}
+                  fill="url(#radarGradPurple)"
+                  fillOpacity={1}
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#fff', stroke: '#8b5cf6', strokeWidth: 2 }}
                 />
               </RadarChart>
             </ResponsiveContainer>
@@ -807,7 +857,7 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
       </div>
 
       {/* Estilo de Comunicacao + IE Gauge */}
-      <div className="grid lg:grid-cols-2 gap-4 mb-4">
+      <div className="grid lg:grid-cols-2 gap-4 mb-4 stagger-children">
         <ChartCard title="Estilo de Comunicacao" subtitle="Distribuicao predominante">
           {estiloPieData.length > 0 ? (
             <div className="flex flex-col lg:flex-row items-center gap-6">
@@ -820,9 +870,10 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
                       cy="50%"
                       innerRadius={55}
                       outerRadius={85}
-                      paddingAngle={3}
+                      paddingAngle={4}
                       dataKey="value"
-                      strokeWidth={0}
+                      stroke="rgba(255,255,255,0.8)"
+                      strokeWidth={2}
                     >
                       {estiloPieData.map((entry) => (
                         <Cell key={entry.name} fill={CORES_ESTILO[entry.name] || '#94a3b8'} />
@@ -875,13 +926,19 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
             <div className="flex flex-col items-center">
               <div className="relative w-28 h-28 mx-auto mb-3">
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                  <defs>
+                    <linearGradient id="ieGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor={dados.ieMedia.nivel === 'alta' ? '#22c55e' : dados.ieMedia.nivel === 'media' ? '#f59e0b' : '#ef4444'} />
+                      <stop offset="100%" stopColor={dados.ieMedia.nivel === 'alta' ? '#86efac' : dados.ieMedia.nivel === 'media' ? '#fcd34d' : '#fca5a5'} />
+                    </linearGradient>
+                  </defs>
                   <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f0ede8" strokeWidth="3" />
                   <circle
                     cx="18"
                     cy="18"
                     r="15.5"
                     fill="none"
-                    stroke={dados.ieMedia.nivel === 'alta' ? '#22c55e' : dados.ieMedia.nivel === 'media' ? '#f59e0b' : '#ef4444'}
+                    stroke="url(#ieGrad)"
                     strokeWidth="3"
                     strokeLinecap="round"
                     strokeDasharray={`${((dados.ieMedia.media - 15) / 60) * 97.4} 97.4`}
@@ -924,7 +981,7 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
       </div>
 
       {/* Bottom row: Top problemas + Perfil emocional */}
-      <div className="grid lg:grid-cols-5 gap-4">
+      <div className="grid lg:grid-cols-5 gap-4 stagger-children">
         <ChartCard title="Pontos de Atencao" subtitle="Top 5 relacionamentos" className="lg:col-span-3">
           {dados.topProblemas.length === 0 ? (
             <div className="flex items-center justify-center h-[200px] text-[#b5b0a8] text-sm font-medium">
@@ -996,13 +1053,19 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
             <p className="text-[11px] text-[#9a9590] uppercase tracking-wider font-bold mb-2">Engajamento</p>
             <div className="relative w-20 h-20 mx-auto mb-2">
               <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <defs>
+                  <linearGradient id="engajGradPurple" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="100%" stopColor="#a78bfa" />
+                  </linearGradient>
+                </defs>
                 <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f0ede8" strokeWidth="3" />
                 <circle
                   cx="18"
                   cy="18"
                   r="15.5"
                   fill="none"
-                  stroke="#8b5cf6"
+                  stroke="url(#engajGradPurple)"
                   strokeWidth="3"
                   strokeLinecap="round"
                   strokeDasharray={`${dados.taxaConclusao * 97.4} 97.4`}

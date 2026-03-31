@@ -38,7 +38,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         'warm-sm': '0 1px 3px 0 rgba(107,91,149,0.06), 0 1px 2px -1px rgba(107,91,149,0.06)',

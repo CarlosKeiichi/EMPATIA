@@ -2,49 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-
-interface Pergunta {
-  id: string;
-  codigo: string;
-  jornada: string;
-  bloco: string;
-  texto: string;
-  tipo: string;
-  opcoes: string | null;
-  ordem: number;
-  ativa: boolean;
-}
+import TrilhaJornada, { Pergunta, BlocoInfo } from '@/components/admin/TrilhaJornada';
+import EditorBloco from '@/components/admin/EditorBloco';
 
 const JORNADAS = [
-  { id: 'trabalho', label: 'Trabalho' },
-  { id: 'estresse', label: 'Estresse' },
-  { id: 'relacionamentos', label: 'Relacionamentos' },
-  { id: 'financas', label: 'Finanças' },
+  { id: 'trabalho', label: 'Trabalho', icone: '🏫', descricao: 'Impacto emocional da atividade docente' },
+  { id: 'relacionamentos', label: 'Relacionamentos', icone: '💛', descricao: 'Relações pessoais e inteligência emocional' },
+  { id: 'financas', label: 'Finanças', icone: '💰', descricao: 'Situação financeira e bem-estar' },
 ];
 
-const TIPOS_BADGE: Record<string, string> = {
-  escala_0_10: 'bg-[#dbeafe] text-[#1d4ed8]',
-  multipla_escolha: 'bg-[#f3e8ff] text-[#7c3aed]',
-  frequencia: 'bg-[#ffedd5] text-[#c2410c]',
-  aberta: 'bg-[#e8f5ee] text-[#2d7a5e]',
+// Map jornada types to include estresse block
+const JORNADA_FILTROS: Record<string, string[]> = {
+  trabalho: ['trabalho', 'estresse'],
+  relacionamentos: ['relacionamentos'],
+  financas: ['financas'],
 };
 
 export default function PerguntasPage() {
   const [perguntas, setPerguntas] = useState<Pergunta[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [jornadaAtiva, setJornadaAtiva] = useState('trabalho');
-  const [editando, setEditando] = useState<Pergunta | null>(null);
-  const [salvando, setSalvando] = useState(false);
-  const [form, setForm] = useState({
-    codigo: '',
-    jornada: 'trabalho',
-    bloco: '',
-    texto: '',
-    tipo: 'escala_0_10',
-    opcoes: '',
-    ordem: 0,
-    ativa: true,
-  });
+  const [blocoSelecionado, setBlocoSelecionado] = useState<string | null>(null);
 
   useEffect(() => {
     carregarPerguntas();
@@ -62,91 +40,45 @@ export default function PerguntasPage() {
     }
   }
 
-  function abrirEdicao(p: Pergunta) {
-    setEditando(p);
-    setForm({
-      codigo: p.codigo,
-      jornada: p.jornada,
-      bloco: p.bloco,
-      texto: p.texto,
-      tipo: p.tipo,
-      opcoes: p.opcoes || '',
-      ordem: p.ordem,
-      ativa: p.ativa,
-    });
-  }
+  const filtros = JORNADA_FILTROS[jornadaAtiva] || [jornadaAtiva];
+  const perguntasFiltradas = perguntas.filter((p) => filtros.includes(p.jornada));
+  const perguntasBloco = blocoSelecionado
+    ? perguntasFiltradas.filter((p) => p.bloco === blocoSelecionado)
+    : [];
 
-  async function salvar() {
-    setSalvando(true);
-    try {
-      const payload = { ...form, opcoes: form.opcoes || null };
+  async function handleReordenarBlocos(blocos: BlocoInfo[]) {
+    // Reassign ordem values: each block's questions get sequential values
+    const itens: { id: string; ordem: number }[] = [];
+    let ordemBase = 0;
 
-      if (editando) {
-        await fetch(`/api/admin/perguntas/${editando.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await fetch('/api/admin/perguntas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+    for (const bloco of blocos) {
+      for (let i = 0; i < bloco.perguntas.length; i++) {
+        itens.push({ id: bloco.perguntas[i].id, ordem: ordemBase + i });
       }
-      await carregarPerguntas();
-      setEditando(null);
-    } catch (error) {
-      console.error('Erro ao salvar:', error);
-    } finally {
-      setSalvando(false);
+      ordemBase += bloco.perguntas.length;
     }
-  }
 
-  async function toggleAtiva(p: Pergunta) {
-    await fetch(`/api/admin/perguntas/${p.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ativa: !p.ativa }),
-    });
-    await carregarPerguntas();
-  }
+    // Optimistically update local state (immutable)
+    const updatedIds = new Map(itens.map((i) => [i.id, i.ordem]));
+    setPerguntas(perguntas.map((p) =>
+      updatedIds.has(p.id) ? { ...p, ordem: updatedIds.get(p.id)! } : p
+    ));
 
-  async function excluir(id: string) {
-    if (!confirm('Excluir esta pergunta?')) return;
-    await fetch(`/api/admin/perguntas/${id}`, { method: 'DELETE' });
-    await carregarPerguntas();
-    if (editando?.id === id) setEditando(null);
-  }
-
-  async function mover(p: Pergunta, direcao: 'up' | 'down') {
-    const filtradas = perguntas
-      .filter((q) => q.jornada === p.jornada && q.bloco === p.bloco)
-      .sort((a, b) => a.ordem - b.ordem);
-
-    const idx = filtradas.findIndex((q) => q.id === p.id);
-    const targetIdx = direcao === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= filtradas.length) return;
-
-    const itens = [
-      { id: filtradas[idx].id, ordem: filtradas[targetIdx].ordem },
-      { id: filtradas[targetIdx].id, ordem: filtradas[idx].ordem },
-    ];
-
+    // Persist to server
     await fetch('/api/admin/perguntas/reordenar', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itens }),
     });
-    await carregarPerguntas();
   }
 
-  const perguntasFiltradas = perguntas.filter((p) => p.jornada === jornadaAtiva);
-  const blocos = [...new Set(perguntasFiltradas.map((p) => p.bloco))];
+  const jornadaInfo = JORNADAS.find((j) => j.id === jornadaAtiva);
+  const totalPerguntas = perguntasFiltradas.length;
+  const totalAtivas = perguntasFiltradas.filter((p) => p.ativa).length;
 
   if (carregando) {
     return (
-      <AdminLayout titulo="Perguntas" subtitulo="Gerencie as perguntas das jornadas">
+      <AdminLayout titulo="Editor de Jornadas" subtitulo="Visualize e edite a trilha de cada jornada">
         <div className="flex items-center justify-center py-32">
           <div className="text-center space-y-3">
             <div className="w-8 h-8 border-2 border-[#2d7a5e] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -158,236 +90,99 @@ export default function PerguntasPage() {
   }
 
   return (
-    <AdminLayout titulo="Perguntas" subtitulo="Gerencie as perguntas das jornadas">
-      {/* Tabs de jornada */}
-      <div className="flex gap-1 bg-white rounded-xl border border-[#ece8e1] p-1 w-fit mb-6">
+    <AdminLayout titulo="Editor de Jornadas" subtitulo="Visualize e edite a trilha de cada jornada">
+      {/* Journey tabs */}
+      <div role="tablist" className="flex gap-2 mb-6">
         {JORNADAS.map((j) => {
-          const count = perguntas.filter((p) => p.jornada === j.id).length;
+          const count = perguntas.filter((p) => (JORNADA_FILTROS[j.id] || [j.id]).includes(p.jornada)).length;
+          const isActive = jornadaAtiva === j.id;
           return (
             <button
               key={j.id}
-              onClick={() => setJornadaAtiva(j.id)}
-              className={`px-4 py-2 rounded-lg text-[13px] font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                jornadaAtiva === j.id
-                  ? 'bg-[#2d7a5e] text-white shadow-sm'
-                  : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-[#f5f3ef]'
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => { setJornadaAtiva(j.id); setBlocoSelecionado(null); }}
+              className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl border-2 transition-all duration-200 ${
+                isActive
+                  ? 'border-[#2d7a5e] bg-[#e8f5ee]/50 shadow-sm'
+                  : 'border-[#ece8e1] bg-white hover:border-[#d5d0c8] hover:shadow-sm'
               }`}
             >
-              {j.label}
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                jornadaAtiva === j.id ? 'bg-white/20' : 'bg-[#f5f3ef]'
-              }`}>
-                {count}
-              </span>
+              <span className="text-xl">{j.icone}</span>
+              <div className="text-left">
+                <p className={`text-[13px] font-bold ${isActive ? 'text-[#2d7a5e]' : 'text-[#4a4842]'}`}>
+                  {j.label}
+                </p>
+                <p className="text-[10px] text-[#9a9590] font-medium">{count} perguntas</p>
+              </div>
             </button>
           );
         })}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Lista de perguntas por bloco */}
-        <div className="lg:col-span-2 space-y-4">
-          {blocos.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#ece8e1] text-center py-10 px-6">
-              <p className="text-[#9a9590] text-sm">Nenhuma pergunta nesta jornada.</p>
+      {/* Journey info bar */}
+      <div className="bg-white rounded-2xl border border-[#ece8e1] p-4 mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{jornadaInfo?.icone}</span>
+          <div>
+            <h2 className="text-[15px] font-bold text-[#2d2a26]">Jornada: {jornadaInfo?.label}</h2>
+            <p className="text-[12px] text-[#9a9590]">{jornadaInfo?.descricao}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-[12px]">
+          <span className="text-[#9a9590]">
+            <strong className="text-[#2d2a26]">{totalPerguntas}</strong> perguntas
+          </span>
+          <span className="text-[#9a9590]">
+            <strong className="text-[#2d7a5e]">{totalAtivas}</strong> ativas
+          </span>
+        </div>
+      </div>
+
+      {/* Main layout: trail + editor */}
+      <div className="grid lg:grid-cols-5 gap-6">
+        {/* Trail (left panel — 3 cols) */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[13px] font-bold text-[#4a4842] uppercase tracking-wider">
+                Trilha da Jornada
+              </h3>
+              <p className="text-[11px] text-[#b5b0a8]">Arraste os blocos para reordenar</p>
             </div>
-          ) : (
-            blocos.map((bloco) => {
-              const perguntasBloco = perguntasFiltradas
-                .filter((p) => p.bloco === bloco)
-                .sort((a, b) => a.ordem - b.ordem);
 
-              return (
-                <div key={bloco} className="bg-white rounded-2xl border border-[#ece8e1] p-5">
-                  <h3 className="font-bold text-[#4a4842] text-[11px] mb-3 uppercase tracking-wider">
-                    {bloco.replace(/_/g, ' ')}
-                  </h3>
-                  <div className="space-y-2">
-                    {perguntasBloco.map((p) => (
-                      <div
-                        key={p.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                          editando?.id === p.id
-                            ? 'bg-[#e8f5ee] ring-1 ring-[#2d7a5e]/30'
-                            : 'bg-[#faf8f5] hover:bg-[#f5f3ef]'
-                        } ${!p.ativa ? 'opacity-40' : ''}`}
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <button
-                            onClick={() => mover(p, 'up')}
-                            className="text-[#b5b0a8] hover:text-[#2d7a5e] text-[10px] leading-none transition-colors"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            onClick={() => mover(p, 'down')}
-                            className="text-[#b5b0a8] hover:text-[#2d7a5e] text-[10px] leading-none transition-colors"
-                          >
-                            ▼
-                          </button>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-[#2d2a26] font-medium truncate">{p.texto}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${TIPOS_BADGE[p.tipo] || 'bg-[#f5f3ef] text-[#4a4842]'}`}>
-                              {p.tipo.replace(/_/g, ' ')}
-                            </span>
-                            <span className="text-[10px] text-[#b5b0a8]">{p.codigo}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <div
-                            onClick={() => toggleAtiva(p)}
-                            className={`w-8 h-[18px] rounded-full transition-all duration-200 relative cursor-pointer ${
-                              p.ativa ? 'bg-[#2d7a5e]' : 'bg-[#d5d0c8]'
-                            }`}
-                          >
-                            <span className={`absolute top-[2px] w-[14px] h-[14px] bg-white rounded-full shadow-sm transition-all duration-200 ${
-                              p.ativa ? 'left-[14px]' : 'left-[2px]'
-                            }`} />
-                          </div>
-                          <button
-                            onClick={() => abrirEdicao(p)}
-                            className="text-[#9a9590] hover:text-[#2d7a5e] transition-colors"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 2l4 4-10 10H4v-4L14 2z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => excluir(p.id)}
-                            className="text-[#d5d0c8] hover:text-[#dc6b6b] transition-colors"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M3 6h14M8 6V4h4v2M5 6v11a1 1 0 001 1h8a1 1 0 001-1V6" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          )}
+            <TrilhaJornada
+              perguntas={perguntasFiltradas}
+              blocoSelecionado={blocoSelecionado}
+              onSelecionarBloco={(b) => setBlocoSelecionado(b === blocoSelecionado ? null : b)}
+              onReordenar={handleReordenarBlocos}
+            />
+          </div>
         </div>
 
-        {/* Editor lateral */}
-        <div className="space-y-4">
-          <button
-            onClick={() => {
-              setEditando(null);
-              setForm({
-                codigo: '',
-                jornada: jornadaAtiva,
-                bloco: '',
-                texto: '',
-                tipo: 'escala_0_10',
-                opcoes: '',
-                ordem: perguntasFiltradas.length,
-                ativa: true,
-              });
-            }}
-            className="w-full py-2.5 bg-[#2d7a5e] text-white text-[13px] font-bold rounded-xl hover:bg-[#24674f] transition-colors"
-          >
-            + Nova Pergunta
-          </button>
-
-          {(editando || form.texto || form.codigo) && (
-            <div className="bg-white rounded-2xl border border-[#ece8e1] p-5 space-y-3">
-              <h3 className="font-bold text-[#2d2a26] text-[14px]">
-                {editando ? 'Editar Pergunta' : 'Nova Pergunta'}
-              </h3>
-
-              <div>
-                <label className="block text-[11px] font-bold text-[#4a4842] mb-1 uppercase tracking-wider">Código</label>
-                <input
-                  className="w-full px-3 py-2 rounded-xl border border-[#ece8e1] bg-[#faf8f5] text-[13px] text-[#2d2a26] focus:outline-none focus:border-[#2d7a5e] transition-colors"
-                  value={form.codigo}
-                  onChange={(e) => setForm({ ...form, codigo: e.target.value })}
-                  placeholder="ex: trab_lid_05"
-                  disabled={!!editando}
-                />
+        {/* Editor (right panel — 2 cols) */}
+        <div className="lg:col-span-2">
+          {blocoSelecionado ? (
+            <EditorBloco
+              bloco={blocoSelecionado}
+              jornada={filtros.find((f) =>
+                perguntasFiltradas.some((p) => p.bloco === blocoSelecionado && p.jornada === f)
+              ) || jornadaAtiva}
+              perguntas={perguntasBloco}
+              onFechar={() => setBlocoSelecionado(null)}
+              onRecarregar={carregarPerguntas}
+            />
+          ) : (
+            <div className="bg-white rounded-2xl border border-[#ece8e1] p-8 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#f5f3ef] flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b5b0a8" strokeWidth="1.5">
+                  <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-[#4a4842] mb-1 uppercase tracking-wider">Texto</label>
-                <textarea
-                  className="w-full px-3 py-2 rounded-xl border border-[#ece8e1] bg-[#faf8f5] text-[13px] text-[#2d2a26] min-h-[80px] resize-y focus:outline-none focus:border-[#2d7a5e] transition-colors"
-                  value={form.texto}
-                  onChange={(e) => setForm({ ...form, texto: e.target.value })}
-                  placeholder="Texto da pergunta..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#4a4842] mb-1 uppercase tracking-wider">Bloco</label>
-                  <input
-                    className="w-full px-3 py-2 rounded-xl border border-[#ece8e1] bg-[#faf8f5] text-[13px] text-[#2d2a26] focus:outline-none focus:border-[#2d7a5e] transition-colors"
-                    value={form.bloco}
-                    onChange={(e) => setForm({ ...form, bloco: e.target.value })}
-                    placeholder="lideranca_sistema"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-[#4a4842] mb-1 uppercase tracking-wider">Tipo</label>
-                  <select
-                    className="w-full px-3 py-2 rounded-xl border border-[#ece8e1] bg-[#faf8f5] text-[13px] text-[#2d2a26] focus:outline-none focus:border-[#2d7a5e] transition-colors"
-                    value={form.tipo}
-                    onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                  >
-                    <option value="escala_0_10">Escala 0-10</option>
-                    <option value="multipla_escolha">Múltipla Escolha</option>
-                    <option value="frequencia">Frequência</option>
-                    <option value="aberta">Aberta</option>
-                  </select>
-                </div>
-              </div>
-
-              {(form.tipo === 'multipla_escolha' || form.tipo === 'frequencia') && (
-                <div>
-                  <label className="block text-[11px] font-bold text-[#4a4842] mb-1 uppercase tracking-wider">Opções (JSON)</label>
-                  <textarea
-                    className="w-full px-3 py-2 rounded-xl border border-[#ece8e1] bg-[#faf8f5] text-[12px] text-[#2d2a26] min-h-[60px] resize-y font-mono focus:outline-none focus:border-[#2d7a5e] transition-colors"
-                    value={form.opcoes}
-                    onChange={(e) => setForm({ ...form, opcoes: e.target.value })}
-                    placeholder='[{"valor":"sim","label":"Sim"}]'
-                  />
-                </div>
-              )}
-
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <div
-                  onClick={() => setForm({ ...form, ativa: !form.ativa })}
-                  className={`w-9 h-5 rounded-full transition-all duration-200 relative cursor-pointer ${
-                    form.ativa ? 'bg-[#2d7a5e]' : 'bg-[#d5d0c8]'
-                  }`}
-                >
-                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200 ${
-                    form.ativa ? 'left-4' : 'left-0.5'
-                  }`} />
-                </div>
-                <span className="text-[13px] font-semibold text-[#4a4842]">Ativa</span>
-              </label>
-
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={salvar}
-                  disabled={salvando}
-                  className="px-5 py-2 bg-[#2d7a5e] text-white text-[13px] font-bold rounded-xl hover:bg-[#24674f] transition-colors disabled:opacity-50"
-                >
-                  {salvando ? 'Salvando...' : 'Salvar'}
-                </button>
-                <button
-                  onClick={() => setEditando(null)}
-                  className="px-4 py-2 text-[13px] text-[#9a9590] hover:text-[#4a4842] font-semibold transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
+              <p className="text-[14px] font-bold text-[#4a4842] mb-1">Selecione um bloco</p>
+              <p className="text-[12px] text-[#9a9590] leading-relaxed">
+                Clique em um bloco na trilha para ver e editar suas perguntas.
+              </p>
             </div>
           )}
         </div>

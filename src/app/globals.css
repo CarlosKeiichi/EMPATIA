@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 @layer base {
   body {
@@ -44,6 +44,37 @@
 }
 .prose-chat li {
   @apply text-sm;
+}
+
+/* Admin dashboard cards — glassmorphism */
+.admin-card {
+  @apply rounded-2xl p-5;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 1px 3px rgba(45, 42, 38, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 8px 32px rgba(45, 42, 38, 0.08),
+    0 0 0 1px rgba(236, 232, 225, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+
+/* Dark premium tooltip */
+.admin-tooltip {
+  @apply rounded-xl px-4 py-3;
+  background: rgba(30, 27, 46, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
 /* Typing animation */
