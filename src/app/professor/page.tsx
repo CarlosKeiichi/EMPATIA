@@ -74,13 +74,18 @@ const estadosEmocionais = [
 
 export default function ProfessorHome() {
   const router = useRouter();
-  const [etapa, setEtapa] = useState<'loading' | 'boas_vindas' | 'retornante' | 'jornada_aberta' | 'estado_emocional' | 'escolha_jornada'>('loading');
+  const [etapa, setEtapa] = useState<'loading' | 'boas_vindas' | 'retornante' | 'jornada_aberta' | 'estado_emocional' | 'dados_demograficos' | 'escolha_jornada'>('loading');
   const [estadoEmocional, setEstadoEmocional] = useState('');
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [diasDesdeUltima, setDiasDesdeUltima] = useState<number | null>(null);
   const [temLembrete, setTemLembrete] = useState(false);
   const [jornadaAberta, setJornadaAberta] = useState<{ id: string; tipo: string; iniciadaEm: string; estadoEmocionalInicial: string | null } | null>(null);
   const [abandonando, setAbandonando] = useState(false);
+  const [demograficoPreenchido, setDemograficoPreenchido] = useState(false);
+  const [genero, setGenero] = useState('');
+  const [faixaEtaria, setFaixaEtaria] = useState('');
+  const [frequenciaAulas, setFrequenciaAulas] = useState('');
+  const [salvandoDemografico, setSalvandoDemografico] = useState(false);
 
   useEffect(() => {
     async function verificarRetornante() {
@@ -93,6 +98,14 @@ export default function ProfessorHome() {
         const jornadaData = await jornadaRes.json();
 
         if (authData.nome) setNomeUsuario(authData.nome.split(' ')[0]);
+
+        // Verificar se dados demográficos já estão preenchidos
+        if (authData.demografico) {
+          const d = authData.demografico;
+          if (d.genero && d.faixaEtaria && d.frequenciaAulas) {
+            setDemograficoPreenchido(true);
+          }
+        }
 
         const todasJornadas = jornadaData.jornadas || [];
         const emAndamento = todasJornadas.find(
@@ -398,12 +411,138 @@ export default function ProfessorHome() {
           </div>
 
           <button
-            onClick={() => setEtapa('escolha_jornada')}
+            onClick={() => setEtapa(demograficoPreenchido ? 'escolha_jornada' : 'dados_demograficos')}
             className="btn-primary w-full"
             disabled={!estadoEmocional}
           >
             Continuar
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela de dados demográficos
+  if (etapa === 'dados_demograficos') {
+    async function salvarDemografico() {
+      setSalvandoDemografico(true);
+      try {
+        await fetch('/api/auth', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ genero, faixaEtaria, frequenciaAulas }),
+        });
+        setDemograficoPreenchido(true);
+      } catch {
+        // silently continue
+      } finally {
+        setSalvandoDemografico(false);
+        setEtapa('escolha_jornada');
+      }
+    }
+
+    const podeAvancar = genero && faixaEtaria && frequenciaAulas;
+
+    return (
+      <div className="min-h-screen bg-organic flex items-center justify-center p-4">
+        <div className="max-w-lg w-full space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-primary-950">Mais sobre você</h2>
+            <p className="text-warm-500 text-sm leading-relaxed">
+              Essas informações ajudam a personalizar sua experiência. São anônimas e protegidas.
+            </p>
+          </div>
+
+          {/* Faixa Etária */}
+          <div className="card space-y-3">
+            <label className="text-sm font-semibold text-primary-800">Faixa etária</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { valor: '18-24', label: '18 a 24 anos' },
+                { valor: '25-34', label: '25 a 34 anos' },
+                { valor: '35-44', label: '35 a 44 anos' },
+                { valor: '45-54', label: '45 a 54 anos' },
+                { valor: '55+', label: '55 anos ou mais' },
+              ].map((f) => (
+                <button
+                  key={f.valor}
+                  onClick={() => setFaixaEtaria(f.valor)}
+                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+                    faixaEtaria === f.valor
+                      ? 'bg-primary-50 border-primary-400 text-primary-800'
+                      : 'bg-white/70 border-primary-100/40 text-primary-600 hover:border-primary-200'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gênero */}
+          <div className="card space-y-3">
+            <label className="text-sm font-semibold text-primary-800">Gênero</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { valor: 'feminino', label: 'Feminino' },
+                { valor: 'masculino', label: 'Masculino' },
+                { valor: 'nao_binario', label: 'Não-binário' },
+                { valor: 'prefiro_nao_dizer', label: 'Prefiro não dizer' },
+              ].map((g) => (
+                <button
+                  key={g.valor}
+                  onClick={() => setGenero(g.valor)}
+                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+                    genero === g.valor
+                      ? 'bg-primary-50 border-primary-400 text-primary-800'
+                      : 'bg-white/70 border-primary-100/40 text-primary-600 hover:border-primary-200'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Frequência de Aulas */}
+          <div className="card space-y-3">
+            <label className="text-sm font-semibold text-primary-800">Frequência de aulas</label>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { valor: 'diaria', label: 'Diária (todos os dias úteis)' },
+                { valor: 'semanal', label: 'Algumas vezes por semana' },
+                { valor: 'eventual', label: 'Eventual / Substituto(a)' },
+              ].map((f) => (
+                <button
+                  key={f.valor}
+                  onClick={() => setFrequenciaAulas(f.valor)}
+                  className={`p-3 rounded-xl border-2 text-sm font-medium text-left transition-all duration-200 ${
+                    frequenciaAulas === f.valor
+                      ? 'bg-primary-50 border-primary-400 text-primary-800'
+                      : 'bg-white/70 border-primary-100/40 text-primary-600 hover:border-primary-200'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={salvarDemografico}
+              className="btn-primary w-full"
+              disabled={!podeAvancar || salvandoDemografico}
+            >
+              {salvandoDemografico ? 'Salvando...' : 'Continuar'}
+            </button>
+            <button
+              onClick={() => setEtapa('escolha_jornada')}
+              className="text-sm text-primary-400 hover:text-primary-600 font-medium transition-colors duration-300"
+            >
+              Pular por agora
+            </button>
+          </div>
         </div>
       </div>
     );

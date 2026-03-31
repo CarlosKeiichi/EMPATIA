@@ -2,49 +2,96 @@
 // SISTEMA DE PONTUAÇÃO E INDICADORES
 // ============================================
 
-// Cálculo de estresse ocupacional (Jornada Trabalho)
+// Cálculo de estresse ocupacional — regras IPCS (contagem de frequências)
 export function calcularEstresseOcupacional(respostas: { valor: string }[]): {
   pontuacao: number;
   diagnostico: string;
   nivel: string;
+  contagem: { nunca: number; as_vezes: number; frequentemente: number };
 } {
-  // Mapeia frequência para pontos
   const mapaPontos: Record<string, number> = {
     nunca: 0,
     as_vezes: 1,
     frequentemente: 2,
   };
 
-  const pontuacao = respostas.reduce((total, r) => {
-    return total + (mapaPontos[r.valor] ?? 0);
-  }, 0);
+  const contagem = { nunca: 0, as_vezes: 0, frequentemente: 0 };
+  let pontuacao = 0;
+
+  for (const r of respostas) {
+    const v = r.valor.toLowerCase();
+    pontuacao += mapaPontos[v] ?? 0;
+    if (v === 'nunca') contagem.nunca++;
+    else if (v === 'as_vezes') contagem.as_vezes++;
+    else if (v === 'frequentemente') contagem.frequentemente++;
+  }
 
   let diagnostico: string;
   let nivel: string;
 
-  if (pontuacao <= 6) {
-    diagnostico = 'Sem sinais significativos de estresse ocupacional';
-    nivel = 'baixo';
-  } else if (pontuacao <= 12) {
-    diagnostico = 'Estágio de resistência - sinais moderados de estresse';
+  // Regras IPCS por contagem de frequência
+  if (contagem.frequentemente >= 5) {
+    diagnostico = 'Estresse ocupacional grave — fase de quase exaustão ou exaustão';
+    nivel = 'critico';
+  } else if (contagem.frequentemente >= 1) {
+    diagnostico = 'Indicadores significativos de estresse — reflita sobre sua percepção frente às demandas';
+    nivel = 'elevado';
+  } else if (contagem.as_vezes > 5) {
+    diagnostico = 'Estágio de resistência — você está lidando com a pressão, mas fique atento';
     nivel = 'moderado';
   } else {
-    diagnostico = 'Estresse elevado - atenção necessária';
-    nivel = 'elevado';
+    diagnostico = 'Sem sinais significativos de estresse ocupacional';
+    nivel = 'baixo';
   }
 
-  return { pontuacao, diagnostico, nivel };
+  return { pontuacao, diagnostico, nivel, contagem };
 }
 
-// Cálculo de burnout relacional (Jornada Relacionamentos)
-export function calcularBurnoutRelacional(pontuacaoTotal: number): {
+// Cálculo de burnout relacional — 10 perguntas, escala 0-3 (Nunca/Às vezes/Frequentemente/Quase sempre)
+// Total: 0-30 pontos
+export function calcularBurnoutRelacional(respostas: { valor: string }[]): {
+  pontuacao: number;
   classificacao: string;
   nivel: string;
+  contagem: { nunca: number; as_vezes: number; frequentemente: number; quase_sempre: number };
 } {
-  if (pontuacaoTotal <= 9) return { classificacao: 'Baixo risco de burnout relacional', nivel: 'baixo' };
-  if (pontuacaoTotal <= 18) return { classificacao: 'Atenção - sinais de desgaste relacional', nivel: 'moderado' };
-  if (pontuacaoTotal <= 24) return { classificacao: 'Risco elevado de burnout relacional', nivel: 'elevado' };
-  return { classificacao: 'Alto risco - necessidade de suporte', nivel: 'critico' };
+  const mapaPontos: Record<string, number> = {
+    nunca: 0,
+    as_vezes: 1,
+    frequentemente: 2,
+    quase_sempre: 3,
+  };
+
+  const contagem = { nunca: 0, as_vezes: 0, frequentemente: 0, quase_sempre: 0 };
+  let pontuacao = 0;
+
+  for (const r of respostas) {
+    const v = r.valor.toLowerCase();
+    pontuacao += mapaPontos[v] ?? 0;
+    if (v === 'nunca') contagem.nunca++;
+    else if (v === 'as_vezes') contagem.as_vezes++;
+    else if (v === 'frequentemente') contagem.frequentemente++;
+    else if (v === 'quase_sempre') contagem.quase_sempre++;
+  }
+
+  let classificacao: string;
+  let nivel: string;
+
+  if (pontuacao <= 9) {
+    classificacao = 'Baixo risco de burnout relacional';
+    nivel = 'baixo';
+  } else if (pontuacao <= 18) {
+    classificacao = 'Atenção — sinais de desgaste relacional';
+    nivel = 'moderado';
+  } else if (pontuacao <= 24) {
+    classificacao = 'Risco elevado de burnout relacional';
+    nivel = 'elevado';
+  } else {
+    classificacao = 'Alto risco — necessidade de suporte';
+    nivel = 'critico';
+  }
+
+  return { pontuacao, classificacao, nivel, contagem };
 }
 
 // IRPE — Índice de Risco Psicossocial Escolar

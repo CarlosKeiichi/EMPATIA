@@ -92,12 +92,12 @@ export const perguntasTrabalho: PerguntaJornada[] = [
   },
 ];
 
-// Bloco de estresse ocupacional (frequência)
+// Bloco de estresse ocupacional — IPCS (10 perguntas, frequência: Nunca/Às vezes/Frequentemente)
 export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_01',
     bloco: 'estresse_ocupacional',
-    texto: 'Segunda-feira me dá desânimo',
+    texto: 'Tenho me sentido cansado(a) ao acordar para ir trabalhar',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -108,7 +108,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_02',
     bloco: 'estresse_ocupacional',
-    texto: 'Meu entusiasmo pelo trabalho está baixo',
+    texto: 'Sinto que meu trabalho consome minha energia emocional',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -119,7 +119,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_03',
     bloco: 'estresse_ocupacional',
-    texto: 'Me sinto irritado no trabalho',
+    texto: 'Tenho dificuldade para dormir por preocupações com o trabalho',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -130,7 +130,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_04',
     bloco: 'estresse_ocupacional',
-    texto: 'Sinto ansiedade no ambiente escolar',
+    texto: 'Sinto irritação ou impaciência no ambiente escolar',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -141,7 +141,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_05',
     bloco: 'estresse_ocupacional',
-    texto: 'Tenho dificuldade para dormir por preocupações com o trabalho',
+    texto: 'Tenho pensado em abandonar a profissão',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -152,7 +152,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_06',
     bloco: 'estresse_ocupacional',
-    texto: 'Sinto que perdi a paixão por ensinar',
+    texto: 'Me sinto emocionalmente esgotado(a) ao final do dia',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -163,7 +163,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_07',
     bloco: 'estresse_ocupacional',
-    texto: 'Me sinto emocionalmente esgotado ao final do dia',
+    texto: 'Sinto dores físicas (cabeça, costas, estômago) relacionadas ao estresse',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -174,7 +174,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_08',
     bloco: 'estresse_ocupacional',
-    texto: 'Tenho pensado em abandonar a profissão',
+    texto: 'Sinto que perdi o entusiasmo ou a paixão por ensinar',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -185,7 +185,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_09',
     bloco: 'estresse_ocupacional',
-    texto: 'Sinto dores no corpo relacionadas ao estresse',
+    texto: 'Tenho a sensação de que não dou conta das demandas',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -196,7 +196,7 @@ export const perguntasEstresse: PerguntaJornada[] = [
   {
     id: 'est_10',
     bloco: 'estresse_ocupacional',
-    texto: 'Me sinto desvalorizado como profissional',
+    texto: 'Me sinto desvalorizado(a) como profissional da educação',
     tipo: 'frequencia',
     opcoes: [
       { valor: 'nunca', label: 'Nunca' },
@@ -556,24 +556,126 @@ export const perguntasRelacionamentos: PerguntaJornada[] = [
     ],
   },
 
-  // Bloco: Burnout Relacional (máximo 30 pontos)
+  // Bloco: Burnout Relacional — 10 perguntas, escala 0-3 (Nunca/Às vezes/Frequentemente/Quase sempre). Total máx: 30
   {
     id: 'rel_burn_t01',
     bloco: 'burnout_relacional_teste',
-    texto: 'Sinto que cuido de todos, menos de mim',
-    tipo: 'escala_0_10',
+    texto: 'Me sinto exausto só de pensar nas relações no trabalho',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
   },
   {
     id: 'rel_burn_t02',
     bloco: 'burnout_relacional_teste',
-    texto: 'Me sinto emocionalmente esgotado(a) nos meus relacionamentos',
-    tipo: 'escala_0_10',
+    texto: 'Sinto que não sou reconhecido como profissional',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
   },
   {
     id: 'rel_burn_t03',
     bloco: 'burnout_relacional_teste',
-    texto: 'Evito interações sociais porque me sinto exausto(a)',
-    tipo: 'escala_0_10',
+    texto: 'Tenho dificuldade de confiar em colegas',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t04',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Evito conversas com pessoas da equipe',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t05',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Me sinto sozinho mesmo rodeado de gente',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t06',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Sinto raiva ao lembrar de certas interações',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t07',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Prefiro tarefas solitárias a projetos colaborativos',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t08',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Me culpo por não conseguir ajudar mais os outros',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t09',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Me pego desejando faltar para não interagir',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
+  },
+  {
+    id: 'rel_burn_t10',
+    bloco: 'burnout_relacional_teste',
+    texto: 'Sinto que sou apenas "mais um" na instituição',
+    tipo: 'frequencia',
+    opcoes: [
+      { valor: 'nunca', label: 'Nunca' },
+      { valor: 'as_vezes', label: 'Às vezes' },
+      { valor: 'frequentemente', label: 'Frequentemente' },
+      { valor: 'quase_sempre', label: 'Quase sempre' },
+    ],
   },
 ];
 

@@ -4,15 +4,64 @@ import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { loginSchema, registroSchema } from '@/lib/validations';
 
-// GET /api/auth - Dados do usuario logado
+// GET /api/auth - Dados do usuario logado (inclui dados demográficos para professores)
 export async function GET() {
   try {
     const usuario = await getUsuarioLogado();
     if (!usuario) {
       return NextResponse.json({ erro: 'Nao autorizado' }, { status: 401 });
     }
-    return NextResponse.json({ nome: usuario.nome, email: usuario.email, role: usuario.role });
+
+    let demografico: { genero: string | null; faixaEtaria: string | null; frequenciaAulas: string | null } | null = null;
+    if (usuario.role === 'professor') {
+      const professor = await prisma.professor.findFirst({
+        where: { userId: usuario.userId },
+        select: { genero: true, faixaEtaria: true, frequenciaAulas: true },
+      });
+      demografico = professor || null;
+    }
+
+    return NextResponse.json({
+      nome: usuario.nome,
+      email: usuario.email,
+      role: usuario.role,
+      ...(demografico && { demografico }),
+    });
   } catch {
+    return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
+  }
+}
+
+// PATCH /api/auth - Atualizar dados demográficos do professor
+export async function PATCH(req: NextRequest) {
+  try {
+    const usuario = await getUsuarioLogado();
+    if (!usuario || usuario.role !== 'professor') {
+      return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { genero, faixaEtaria, frequenciaAulas } = body;
+
+    const professor = await prisma.professor.findFirst({
+      where: { userId: usuario.userId },
+    });
+    if (!professor) {
+      return NextResponse.json({ erro: 'Professor não encontrado' }, { status: 404 });
+    }
+
+    await prisma.professor.update({
+      where: { id: professor.id },
+      data: {
+        ...(genero && { genero }),
+        ...(faixaEtaria && { faixaEtaria }),
+        ...(frequenciaAulas && { frequenciaAulas }),
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('Erro ao atualizar dados demográficos:', error);
     return NextResponse.json({ erro: 'Erro interno' }, { status: 500 });
   }
 }

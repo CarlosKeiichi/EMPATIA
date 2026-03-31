@@ -8,6 +8,21 @@ interface Mensagem {
   conteudo: string;
 }
 
+interface PerguntaTeste {
+  id: string;
+  bloco: string;
+  texto: string;
+  tipo: string;
+  opcoes?: { valor: string; label: string }[];
+}
+
+interface TesteAtivo {
+  id: string;
+  perguntas: PerguntaTeste[];
+  perguntaAtual: number;
+  respostas: { perguntaId: string; bloco: string; pergunta: string; tipo: string; valor: string; pontuacao: number | null }[];
+}
+
 function formatarMarkdown(texto: string): string {
   return texto
     .replace(/&/g, '&amp;')
@@ -33,6 +48,7 @@ export default function JornadaPage() {
   const [finalizando, setFinalizando] = useState(false);
   const [totalPerguntas, setTotalPerguntas] = useState(0);
   const [nomeUsuario, setNomeUsuario] = useState('');
+  const [testeAtivo, setTesteAtivo] = useState<TesteAtivo | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -137,6 +153,28 @@ export default function JornadaPage() {
     }
   }
 
+  // Instruções de teste para o contexto da IA
+  const instrucoesTeste = `
+TESTES PSICOLÓGICOS ESTRUTURADOS:
+Você pode convidar o professor a realizar testes psicológicos durante a conversa. Para isso, inclua o marcador [INICIAR_TESTE:id_do_teste] na sua resposta.
+
+Testes disponíveis por jornada:
+- Jornada "trabalho": [INICIAR_TESTE:estresse_ocupacional] (10 perguntas sobre estresse no trabalho)
+- Jornada "relacionamentos":
+  - [INICIAR_TESTE:inteligencia_emocional_teste] (15 perguntas sobre inteligência emocional)
+  - [INICIAR_TESTE:estilo_comunicacao] (5 situações sobre estilo de comunicação)
+  - [INICIAR_TESTE:burnout_relacional_teste] (10 perguntas sobre burnout relacional)
+
+QUANDO usar testes:
+- Na jornada "trabalho": convide para o teste de estresse ocupacional após explorar as dimensões de trabalho (após 4-6 trocas de mensagens)
+- Na jornada "relacionamentos": convide para os testes após explorar autocuidado e relações (IE primeiro, depois comunicação, depois burnout)
+- Use transições naturais e acolhedoras. Exemplo: "Agora eu gostaria de te convidar para um pequeno exercício..."
+
+IMPORTANTE:
+- Inclua apenas UM marcador por mensagem
+- O sistema cuida da apresentação das perguntas — você NÃO precisa listar as perguntas
+- Após o teste, você receberá os resultados e deve oferecer feedback acolhedor`;
+
   async function enviarParaIA(texto: string, primeiraMsg = false, contextoExtra = '') {
     setCarregando(true);
 
@@ -155,7 +193,7 @@ export default function JornadaPage() {
           conversaId,
           mensagem: texto,
           configIA,
-          contexto: contextoBase + contextoNome + (contextoExtra ? `\n${contextoExtra}` : ''),
+          contexto: contextoBase + contextoNome + instrucoesTeste + (contextoExtra ? `\n${contextoExtra}` : ''),
         }),
       });
 
@@ -165,6 +203,16 @@ export default function JornadaPage() {
       const textoResposta = data.resposta || data.erro || 'Desculpe, não consegui responder. Tente novamente.';
       setMensagens((prev) => [...prev, { role: 'assistant', conteudo: textoResposta }]);
       setEtapaAtual((e) => e + 1);
+
+      // Se a API retornou um teste, ativar modo teste
+      if (data.teste) {
+        setTesteAtivo({
+          id: data.teste.id,
+          perguntas: data.teste.perguntas,
+          perguntaAtual: 0,
+          respostas: [],
+        });
+      }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       setMensagens((prev) => [
@@ -201,9 +249,85 @@ export default function JornadaPage() {
     enviarParaIA(texto);
   }
 
+  // Responder pergunta do teste
+  function responderTeste(valor: string, pontuacao: number | null) {
+    if (!testeAtivo) return;
+    const pergunta = testeAtivo.perguntas[testeAtivo.perguntaAtual];
+
+    const novaResposta = {
+      perguntaId: pergunta.id,
+      bloco: pergunta.bloco,
+      pergunta: pergunta.texto,
+      tipo: pergunta.tipo,
+      valor,
+      pontuacao,
+    };
+
+    const novasRespostas = [...testeAtivo.respostas, novaResposta];
+    const proximaPergunta = testeAtivo.perguntaAtual + 1;
+
+    if (proximaPergunta >= testeAtivo.perguntas.length) {
+      // Teste concluído — salvar respostas e enviar resultado para Márcia
+      setTesteAtivo(null);
+      finalizarTeste(testeAtivo.id, novasRespostas);
+    } else {
+      setTesteAtivo({
+        ...testeAtivo,
+        perguntaAtual: proximaPergunta,
+        respostas: novasRespostas,
+      });
+    }
+  }
+
+  async function finalizarTeste(
+    testeId: string,
+    respostasTeste: { perguntaId: string; bloco: string; pergunta: string; tipo: string; valor: string; pontuacao: number | null }[]
+  ) {
+    // Salvar respostas do teste na jornada
+    if (jornadaId) {
+      try {
+        await fetch('/api/jornada', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jornadaId,
+            respostas: respostasTeste,
+            finalizar: false,
+          }),
+        });
+      } catch (error) {
+        console.error('Erro ao salvar respostas do teste:', error);
+      }
+    }
+
+    // Adicionar ao tracking local
+    setRespostas((prev) => [
+      ...prev,
+      ...respostasTeste.map((r) => ({ etapa: r.perguntaId, valor: r.valor, bloco: r.bloco })),
+    ]);
+
+    // Montar resumo para Márcia
+    const resumo = respostasTeste
+      .map((r) => `${r.pergunta}: ${r.valor}`)
+      .join('\n');
+
+    const nomesTeste: Record<string, string> = {
+      estresse_ocupacional: 'Estresse Ocupacional (IPCS)',
+      inteligencia_emocional_teste: 'Inteligência Emocional',
+      estilo_comunicacao: 'Estilo de Comunicação',
+      burnout_relacional_teste: 'Burnout Relacional',
+    };
+
+    enviarParaIA(
+      `Concluí o teste de ${nomesTeste[testeId] || testeId}.`,
+      false,
+      `RESULTADO DO TESTE "${nomesTeste[testeId] || testeId}":\n${resumo}\n\nDê feedback acolhedor sobre os resultados. Não repita as perguntas. Interprete de forma empática e construtiva. Depois, continue a jornada naturalmente.`
+    );
+  }
+
   // Detectar se a ultima mensagem da IA pede escala 0-10
   const ultimaMsgIA = mensagens.filter((m) => m.role === 'assistant').slice(-1)[0];
-  const mostrarEscala = ultimaMsgIA && /(?:0\s*a\s*10|escala|nota|pontue|avalie.*número)/i.test(ultimaMsgIA.conteudo);
+  const mostrarEscala = !testeAtivo && ultimaMsgIA && /(?:0\s*a\s*10|escala|nota|pontue|avalie.*número)/i.test(ultimaMsgIA.conteudo);
 
   async function finalizarJornada() {
     if (finalizando) return;
@@ -353,8 +477,79 @@ export default function JornadaPage() {
         )}
       </div>
 
+      {/* Modo Teste — perguntas estruturadas com botões */}
+      {testeAtivo && (
+        <div className="px-4 py-4 bg-white/90 backdrop-blur-md border-t border-primary-100/40 animate-slide-up">
+          {/* Progresso do teste */}
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-primary-500 tracking-wide uppercase">
+              {testeAtivo.id === 'estresse_ocupacional' && 'Teste de Estresse'}
+              {testeAtivo.id === 'inteligencia_emocional_teste' && 'Inteligência Emocional'}
+              {testeAtivo.id === 'estilo_comunicacao' && 'Estilo de Comunicação'}
+              {testeAtivo.id === 'burnout_relacional_teste' && 'Burnout Relacional'}
+            </p>
+            <span className="text-xs text-primary-400 font-medium">
+              {testeAtivo.perguntaAtual + 1} de {testeAtivo.perguntas.length}
+            </span>
+          </div>
+
+          {/* Barra de progresso do teste */}
+          <div className="h-1.5 bg-primary-100/60 rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${((testeAtivo.perguntaAtual) / testeAtivo.perguntas.length) * 100}%` }}
+            />
+          </div>
+
+          {/* Pergunta atual */}
+          <p className="text-sm font-medium text-primary-900 mb-4 leading-relaxed">
+            {testeAtivo.perguntas[testeAtivo.perguntaAtual].texto}
+          </p>
+
+          {/* Opções como botões */}
+          <div className="space-y-2">
+            {testeAtivo.perguntas[testeAtivo.perguntaAtual].opcoes?.map((opcao) => {
+              // Calcular pontuação baseado no tipo
+              let pontuacao: number | null = null;
+              const tipo = testeAtivo.perguntas[testeAtivo.perguntaAtual].tipo;
+              if (tipo === 'frequencia') {
+                const mapFreq: Record<string, number> = { nunca: 0, as_vezes: 1, frequentemente: 2, quase_sempre: 3 };
+                pontuacao = mapFreq[opcao.valor] ?? null;
+              } else if (tipo === 'multipla_escolha') {
+                pontuacao = parseInt(opcao.valor) || null;
+              }
+
+              return (
+                <button
+                  key={opcao.valor}
+                  onClick={() => responderTeste(opcao.valor, pontuacao)}
+                  className="w-full p-3 rounded-xl border-2 border-primary-100/60 bg-white/80 hover:bg-primary-50 hover:border-primary-300 text-sm text-primary-700 font-medium text-left transition-all duration-200 hover:shadow-warm-sm"
+                >
+                  {opcao.label}
+                </button>
+              );
+            })}
+
+            {/* Fallback para perguntas sem opções (escala) */}
+            {!testeAtivo.perguntas[testeAtivo.perguntaAtual].opcoes && (
+              <div className="flex gap-1.5 justify-center flex-wrap">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => responderTeste(String(n), n)}
+                    className="w-10 h-10 rounded-xl text-xs font-semibold border-2 border-primary-100/60 bg-white/70 hover:bg-primary-50 hover:border-primary-300 text-primary-600 transition-all duration-200"
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Escala rápida de 0-10 — condicional */}
-      {mostrarEscala && (
+      {!testeAtivo && mostrarEscala && (
         <div className="px-4 pb-2 bg-warm-50 animate-slide-up">
           <div className="flex gap-1.5 justify-center flex-wrap">
             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -374,29 +569,31 @@ export default function JornadaPage() {
         </div>
       )}
 
-      {/* Input */}
-      <form onSubmit={handleEnviar} className="border-t border-primary-100/30 p-4 bg-white/70 backdrop-blur-md sticky bottom-0">
-        <div className="flex gap-3">
-          <input
-            ref={inputRef}
-            type="text"
-            className="input flex-1 text-sm"
-            placeholder="Digite sua resposta..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={carregando}
-          />
-          <button
-            type="submit"
-            disabled={carregando || !input.trim()}
-            className="btn-primary px-5 disabled:opacity-50"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
-        </div>
-      </form>
+      {/* Input — oculto durante modo teste */}
+      {!testeAtivo && (
+        <form onSubmit={handleEnviar} className="border-t border-primary-100/30 p-4 bg-white/70 backdrop-blur-md sticky bottom-0">
+          <div className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              className="input flex-1 text-sm"
+              placeholder="Digite sua resposta..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={carregando}
+            />
+            <button
+              type="submit"
+              disabled={carregando || !input.trim()}
+              className="btn-primary px-5 disabled:opacity-50"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

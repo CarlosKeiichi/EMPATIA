@@ -3,6 +3,7 @@ import { getUsuarioLogado } from '@/lib/auth';
 import { enviarMensagem, MensagemChat } from '@/lib/claude';
 import { prisma } from '@/lib/db';
 import { chatSchema } from '@/lib/validations';
+import { getPerguntasTeste } from '@/lib/perguntas';
 
 export const maxDuration = 60;
 
@@ -70,18 +71,33 @@ export async function POST(req: NextRequest) {
     const configNome = configIA || 'marcia_suporte';
     const resposta = await enviarMensagem(configNome, historico, contexto);
 
-    // Salvar resposta da IA
+    // Detectar marcador de teste [INICIAR_TESTE:xxx]
+    const testeMatch = resposta.match(/\[INICIAR_TESTE:(\w+)\]/);
+    let teste = null;
+    let respostaLimpa = resposta;
+
+    if (testeMatch) {
+      const testeId = testeMatch[1];
+      respostaLimpa = resposta.replace(/\[INICIAR_TESTE:\w+\]/, '').trim();
+      const perguntas = getPerguntasTeste(testeId);
+      if (perguntas.length > 0) {
+        teste = { id: testeId, perguntas };
+      }
+    }
+
+    // Salvar resposta da IA (sem o marcador)
     await prisma.mensagem.create({
       data: {
         conversaId: conversa.id,
         role: 'assistant',
-        conteudo: resposta,
+        conteudo: respostaLimpa,
       },
     });
 
     return NextResponse.json({
       conversaId: conversa.id,
-      resposta,
+      resposta: respostaLimpa,
+      ...(teste && { teste }),
     });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);

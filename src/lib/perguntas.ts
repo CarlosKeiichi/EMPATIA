@@ -1,6 +1,10 @@
 import { prisma } from './db';
 import { PerguntaJornada } from '@/types';
-import { getPerguntasPorJornada as getPerguntasHardcoded } from '@/config/perguntas';
+import {
+  getPerguntasPorJornada as getPerguntasHardcoded,
+  perguntasEstresse,
+  perguntasRelacionamentos,
+} from '@/config/perguntas';
 
 /**
  * Busca perguntas do banco de dados por tipo de jornada.
@@ -34,4 +38,21 @@ export async function getPerguntasPorJornadaDB(tipo: string): Promise<PerguntaJo
     console.error('Erro ao buscar perguntas do banco, usando fallback:', error);
     return getPerguntasHardcoded(tipo);
   }
+}
+
+/**
+ * Busca perguntas de um teste específico pelo ID do bloco.
+ * Testes válidos: estresse_ocupacional, inteligencia_emocional_teste,
+ * estilo_comunicacao, burnout_relacional_teste
+ */
+export function getPerguntasTeste(testeId: string): PerguntaJornada[] {
+  if (testeId === 'estresse_ocupacional') {
+    return perguntasEstresse;
+  }
+  // Testes que são blocos dentro de perguntasRelacionamentos
+  const blocosTeste = ['inteligencia_emocional_teste', 'estilo_comunicacao', 'burnout_relacional_teste'];
+  if (blocosTeste.includes(testeId)) {
+    return perguntasRelacionamentos.filter((p) => p.bloco === testeId);
+  }
+  return [];
 }
