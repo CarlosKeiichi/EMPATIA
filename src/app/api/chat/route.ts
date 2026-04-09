@@ -4,6 +4,7 @@ import { enviarMensagem, MensagemChat } from '@/lib/claude';
 import { prisma } from '@/lib/db';
 import { chatSchema } from '@/lib/validations';
 import { getPerguntasTeste } from '@/lib/perguntas';
+import { construirMemoriaMarcia } from '@/lib/memoria';
 
 export const maxDuration = 60;
 
@@ -67,9 +68,21 @@ export async function POST(req: NextRequest) {
     }));
     historico.push({ role: 'user', content: mensagem });
 
-    // Enviar para Claude
+    // Construir contexto com memória para conversas de suporte
     const configNome = configIA || 'marcia_suporte';
-    const resposta = await enviarMensagem(configNome, historico, contexto);
+    let contextoFinal = contexto || '';
+
+    if (configNome === 'marcia_suporte') {
+      const professor = await prisma.professor.findUnique({ where: { userId: usuario.userId } });
+      if (professor) {
+        const memoria = await construirMemoriaMarcia(professor.id);
+        if (memoria) {
+          contextoFinal = memoria + (contextoFinal ? `\n\n${contextoFinal}` : '');
+        }
+      }
+    }
+
+    const resposta = await enviarMensagem(configNome, historico, contextoFinal || undefined);
 
     // Detectar marcador de teste [INICIAR_TESTE:xxx]
     const testeMatch = resposta.match(/\[INICIAR_TESTE:(\w+)\]/);

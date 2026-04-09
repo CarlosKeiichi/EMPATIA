@@ -244,6 +244,18 @@ export default function ProfessorHome() {
             </div>
           </div>
 
+          {/* Conversar com Márcia */}
+          <button
+            onClick={() => router.push('/professor/chat')}
+            className="w-full p-4 rounded-2xl border-2 border-primary-200/40 bg-white/60 backdrop-blur-sm hover:border-primary-400 hover:bg-primary-50/80 transition-all duration-300 text-left flex items-center gap-4 animate-slide-up"
+          >
+            <span className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary-100 flex items-center justify-center text-2xl">💬</span>
+            <div>
+              <h3 className="font-bold text-sm text-primary-800">Conversar com a Márcia</h3>
+              <p className="text-xs text-warm-500 mt-0.5">Desabafe, peça dicas ou só converse</p>
+            </div>
+          </button>
+
           {/* Atalhos */}
           <div className="flex flex-col gap-3">
             <button
@@ -578,6 +590,18 @@ export default function ProfessorHome() {
             </button>
           ))}
         </div>
+
+        {/* Conversar com Márcia */}
+        <button
+          onClick={() => router.push('/professor/chat')}
+          className="w-full p-4 rounded-2xl border-2 border-primary-100/40 bg-white/60 backdrop-blur-sm hover:border-primary-300 hover:bg-primary-50/60 transition-all duration-300 text-left flex items-center gap-3"
+        >
+          <span className="text-xl">💬</span>
+          <div>
+            <span className="text-sm font-semibold text-primary-700">Conversar com a Márcia</span>
+            <span className="text-xs text-warm-400 ml-2">sem jornada</span>
+          </div>
+        </button>
 
         <div className="text-center">
           <button
