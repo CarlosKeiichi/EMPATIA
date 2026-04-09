@@ -12,11 +12,11 @@ export async function GET() {
       return NextResponse.json({ erro: 'Nao autorizado' }, { status: 401 });
     }
 
-    let demografico: { genero: string | null; faixaEtaria: string | null; frequenciaAulas: string | null } | null = null;
+    let demografico: { genero: string | null; faixaEtaria: string | null; frequenciaAulas: string | null; funcaoEnsino: string | null } | null = null;
     if (usuario.role === 'professor') {
       const professor = await prisma.professor.findFirst({
         where: { userId: usuario.userId },
-        select: { genero: true, faixaEtaria: true, frequenciaAulas: true },
+        select: { genero: true, faixaEtaria: true, frequenciaAulas: true, funcaoEnsino: true },
       });
       demografico = professor || null;
     }
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { genero, faixaEtaria, frequenciaAulas } = body;
+    const { genero, faixaEtaria, frequenciaAulas, funcaoEnsino } = body;
 
     const professor = await prisma.professor.findFirst({
       where: { userId: usuario.userId },
@@ -56,6 +56,7 @@ export async function PATCH(req: NextRequest) {
         ...(genero && { genero }),
         ...(faixaEtaria && { faixaEtaria }),
         ...(frequenciaAulas && { frequenciaAulas }),
+        ...(funcaoEnsino && { funcaoEnsino }),
       },
     });
 
@@ -131,6 +132,7 @@ async function registrar(dados: {
   genero?: string;
   faixaEtaria?: string;
   frequenciaAulas?: string;
+  funcaoEnsino?: string;
   escolaId?: string;
 }) {
   const existente = await prisma.user.findUnique({ where: { email: dados.email } });
@@ -150,6 +152,7 @@ async function registrar(dados: {
           genero: dados.genero,
           faixaEtaria: dados.faixaEtaria,
           frequenciaAulas: dados.frequenciaAulas,
+          funcaoEnsino: dados.funcaoEnsino,
           escolaId: dados.escolaId || undefined,
         },
       },

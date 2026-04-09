@@ -35,6 +35,7 @@ export default function CadastroPage() {
   const [genero, setGenero] = useState('');
   const [faixaEtaria, setFaixaEtaria] = useState('');
   const [frequenciaAulas, setFrequenciaAulas] = useState('');
+  const [funcaoEnsino, setFuncaoEnsino] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
 
@@ -65,6 +66,7 @@ export default function CadastroPage() {
           genero: genero || undefined,
           faixaEtaria: faixaEtaria || undefined,
           frequenciaAulas: frequenciaAulas || undefined,
+          funcaoEnsino: funcaoEnsino || undefined,
         }),
       });
 
@@ -269,6 +271,28 @@ export default function CadastroPage() {
                       onClick={() => setFrequenciaAulas(f.valor)}
                       className={`w-full px-4 py-2.5 rounded-2xl text-sm font-medium border-2 text-left transition-all duration-200 ${
                         frequenciaAulas === f.valor
+                          ? 'border-primary-400 bg-primary-50 text-primary-700 shadow-warm-sm'
+                          : 'border-warm-200 text-warm-600 hover:border-primary-200 hover:bg-primary-50/50'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-warm-700 mb-2">Ensinar e sua funcao...</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { valor: 'primaria', label: 'Primaria (principal)' },
+                    { valor: 'secundaria', label: 'Secundaria' },
+                  ].map((f) => (
+                    <button
+                      key={f.valor}
+                      onClick={() => setFuncaoEnsino(f.valor)}
+                      className={`px-4 py-2.5 rounded-2xl text-sm font-medium border-2 transition-all duration-200 ${
+                        funcaoEnsino === f.valor
                           ? 'border-primary-400 bg-primary-50 text-primary-700 shadow-warm-sm'
                           : 'border-warm-200 text-warm-600 hover:border-primary-200 hover:bg-primary-50/50'
                       }`}

@@ -273,22 +273,50 @@ export function extrairTopProblemas(
     .map((r) => r.pergunta);
 }
 
-// Calcula radar de estresse por dimensão
+// Escala máxima por bloco (para normalização ao radar 0-10)
+const ESCALA_MAX_BLOCO: Record<string, number> = {
+  estresse_ocupacional: 2,          // frequência: nunca=0, às_vezes=1, frequentemente=2
+  burnout_relacional_teste: 3,      // frequência: nunca=0..quase_sempre=3
+  inteligencia_emocional_teste: 5,  // likert 1-5
+  estilo_comunicacao: 0,            // categórico — excluir do radar
+};
+// Todos os outros blocos (conversacionais) usam escala 0-10
+
+// Blocos de teste estruturado (excluídos do radar de estresse por dimensão)
+export const BLOCOS_TESTE = [
+  'estresse_ocupacional',
+  'burnout_relacional_teste',
+  'inteligencia_emocional_teste',
+  'estilo_comunicacao',
+];
+
+// Calcula radar de estresse por dimensão (normalizado 0-10)
 export function calcularRadarEstresse(
-  respostas: { bloco: string; pontuacao: number | null }[]
+  respostas: { bloco: string; pontuacao: number | null }[],
+  incluirTestes = false
 ): { dimensao: string; valor: number }[] {
   const grupos: Record<string, number[]> = {};
 
   for (const r of respostas) {
     if (r.pontuacao === null) continue;
+    // Por padrão, excluir blocos de teste estruturado do radar
+    if (!incluirTestes && BLOCOS_TESTE.includes(r.bloco)) continue;
     if (!grupos[r.bloco]) grupos[r.bloco] = [];
     grupos[r.bloco].push(r.pontuacao);
   }
 
-  return Object.entries(grupos).map(([dimensao, valores]) => ({
-    dimensao: formatarNomeBloco(dimensao),
-    valor: valores.reduce((a, b) => a + b, 0) / valores.length,
-  }));
+  return Object.entries(grupos).map(([bloco, valores]) => {
+    const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+    const escalaMax = ESCALA_MAX_BLOCO[bloco];
+    // Normalizar para 0-10 se o bloco tem escala diferente
+    const valorNorm = escalaMax && escalaMax !== 10
+      ? Math.min(10, (media / escalaMax) * 10)
+      : Math.min(10, media);
+    return {
+      dimensao: formatarNomeBloco(bloco),
+      valor: Math.round(valorNorm * 10) / 10,
+    };
+  });
 }
 
 function formatarNomeBloco(bloco: string): string {

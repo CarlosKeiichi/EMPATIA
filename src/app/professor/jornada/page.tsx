@@ -49,12 +49,31 @@ export default function JornadaPage() {
   const [totalPerguntas, setTotalPerguntas] = useState(0);
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [testeAtivo, setTesteAtivo] = useState<TesteAtivo | null>(null);
+  const [testesCompletados, setTestesCompletados] = useState<Set<string>>(new Set());
+  const [avisoTeste, setAvisoTeste] = useState('');
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const TESTES_OBRIGATORIOS: Record<string, string[]> = {
+    trabalho: ['estresse_ocupacional'],
+    relacionamentos: ['inteligencia_emocional_teste', 'estilo_comunicacao', 'burnout_relacional_teste'],
+    financas: [],
+  };
+
+  const NOMES_TESTE: Record<string, string> = {
+    estresse_ocupacional: 'Estresse Ocupacional (IPCS)',
+    inteligencia_emocional_teste: 'Inteligencia Emocional',
+    estilo_comunicacao: 'Estilo de Comunicacao',
+    burnout_relacional_teste: 'Burnout Relacional',
+  };
 
   const tipoJornada = typeof window !== 'undefined' ? sessionStorage.getItem('tipoJornada') : 'trabalho';
   const estadoInicial = typeof window !== 'undefined' ? (sessionStorage.getItem('estadoEmocionalInicial') || 'C') : 'C';
   const configIA = `marcia_jornada_${tipoJornada}`;
+
+  const testesPendentes = (TESTES_OBRIGATORIOS[tipoJornada || ''] || []).filter(
+    (t) => !testesCompletados.has(t)
+  );
 
   const nomesJornada: Record<string, string> = {
     trabalho: 'Trabalho',
@@ -268,6 +287,7 @@ IMPORTANTE:
 
     if (proximaPergunta >= testeAtivo.perguntas.length) {
       // Teste concluído — salvar respostas e enviar resultado para Márcia
+      setTestesCompletados((prev) => new Set([...prev, testeAtivo.id]));
       setTesteAtivo(null);
       finalizarTeste(testeAtivo.id, novasRespostas);
     } else {
@@ -329,8 +349,41 @@ IMPORTANTE:
   const ultimaMsgIA = mensagens.filter((m) => m.role === 'assistant').slice(-1)[0];
   const mostrarEscala = !testeAtivo && ultimaMsgIA && /(?:0\s*a\s*10|escala|nota|pontue|avalie.*número)/i.test(ultimaMsgIA.conteudo);
 
+  async function iniciarTestePendente() {
+    if (testesPendentes.length === 0) return;
+    const testeId = testesPendentes[0];
+    try {
+      const res = await fetch(`/api/jornada/teste?id=${testeId}`);
+      const data = await res.json();
+      if (data.perguntas?.length > 0) {
+        setAvisoTeste('');
+        setTesteAtivo({
+          id: data.id,
+          perguntas: data.perguntas,
+          perguntaAtual: 0,
+          respostas: [],
+        });
+        setMensagens((prev) => [
+          ...prev,
+          { role: 'assistant', conteudo: `Antes de finalizar, vamos completar o teste de **${NOMES_TESTE[testeId] || testeId}**. Responda as perguntas abaixo.` },
+        ]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar teste:', error);
+    }
+  }
+
   async function finalizarJornada() {
     if (finalizando) return;
+
+    // Verificar testes obrigatórios
+    if (testesPendentes.length > 0) {
+      const nomes = testesPendentes.map((t) => NOMES_TESTE[t] || t).join(', ');
+      setAvisoTeste(`Complete os testes obrigatorios antes de finalizar: ${nomes}`);
+      iniciarTestePendente();
+      return;
+    }
+
     setFinalizando(true);
 
     try {
@@ -435,6 +488,13 @@ IMPORTANTE:
           </div>
         )}
       </header>
+
+      {/* Aviso de testes pendentes */}
+      {avisoTeste && (
+        <div className="mx-4 mt-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-[13px] text-amber-800 font-semibold animate-slide-up">
+          {avisoTeste}
+        </div>
+      )}
 
       {/* Mensagens */}
       <div ref={chatRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-5 bg-organic">

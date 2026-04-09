@@ -260,17 +260,58 @@ function InsightBanner({ message, cor }: { message: string; cor: string }) {
   );
 }
 
+const FILTROS_DEMOGRAFICOS = {
+  genero: [
+    { valor: '', label: 'Todos os generos' },
+    { valor: 'feminino', label: 'Feminino' },
+    { valor: 'masculino', label: 'Masculino' },
+    { valor: 'nao_binario', label: 'Nao-binario' },
+    { valor: 'prefiro_nao_dizer', label: 'Prefiro nao dizer' },
+  ],
+  faixaEtaria: [
+    { valor: '', label: 'Todas as idades' },
+    { valor: '20-29', label: '20-29 anos' },
+    { valor: '30-39', label: '30-39 anos' },
+    { valor: '40-49', label: '40-49 anos' },
+    { valor: '50-59', label: '50-59 anos' },
+    { valor: '60+', label: '60+ anos' },
+  ],
+  frequenciaAulas: [
+    { valor: '', label: 'Todas as frequencias' },
+    { valor: 'integral', label: 'Tempo integral' },
+    { valor: 'parcial', label: 'Meio periodo' },
+    { valor: 'eventual', label: 'Eventual' },
+  ],
+  funcaoEnsino: [
+    { valor: '', label: 'Todas as funcoes' },
+    { valor: 'primaria', label: 'Funcao primaria' },
+    { valor: 'secundaria', label: 'Funcao secundaria' },
+  ],
+};
+
 export default function AdminDashboard() {
   const [dados, setDados] = useState<DadosDash | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [abaAtiva, setAbaAtiva] = useState<AbaJornada>('geral');
+  const [filtros, setFiltros] = useState<Record<string, string>>({
+    genero: '', faixaEtaria: '', frequenciaAulas: '', funcaoEnsino: '',
+  });
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-  const carregarDados = useCallback(async (jornada?: string) => {
+  const filtrosAtivos = Object.values(filtros).filter(Boolean).length;
+
+  const carregarDados = useCallback(async (jornada?: string, filtrosDemog?: Record<string, string>) => {
     setCarregando(true);
     try {
-      const url = jornada && jornada !== 'geral'
-        ? `/api/dashboard?jornada=${jornada}`
-        : '/api/dashboard';
+      const params = new URLSearchParams();
+      if (jornada && jornada !== 'geral') params.set('jornada', jornada);
+      const f = filtrosDemog || filtros;
+      if (f.genero) params.set('genero', f.genero);
+      if (f.faixaEtaria) params.set('faixaEtaria', f.faixaEtaria);
+      if (f.frequenciaAulas) params.set('frequenciaAulas', f.frequenciaAulas);
+      if (f.funcaoEnsino) params.set('funcaoEnsino', f.funcaoEnsino);
+      const qs = params.toString();
+      const url = `/api/dashboard${qs ? `?${qs}` : ''}`;
       const res = await fetch(url);
       const data = await res.json();
       setDados(data);
@@ -279,11 +320,23 @@ export default function AdminDashboard() {
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [filtros]);
 
   useEffect(() => {
     carregarDados(abaAtiva);
   }, [abaAtiva, carregarDados]);
+
+  function handleFiltroChange(campo: string, valor: string) {
+    const novosFiltros = { ...filtros, [campo]: valor };
+    setFiltros(novosFiltros);
+    carregarDados(abaAtiva, novosFiltros);
+  }
+
+  function limparFiltros() {
+    const vazio = { genero: '', faixaEtaria: '', frequenciaAulas: '', funcaoEnsino: '' };
+    setFiltros(vazio);
+    carregarDados(abaAtiva, vazio);
+  }
 
   if (carregando) {
     return (
@@ -328,7 +381,75 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout titulo="Dashboard" subtitulo="Visao geral da plataforma">
-      {/* Abas de jornada */}
+      {/* Filtros demográficos + Abas */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(45,42,38,0.04)' }}>
+          {ABAS.map((aba) => (
+            <button
+              key={aba.id}
+              onClick={() => setAbaAtiva(aba.id)}
+              className={`px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${
+                abaAtiva === aba.id
+                  ? 'text-white shadow-md'
+                  : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-white/50'
+              }`}
+              style={abaAtiva === aba.id ? { background: 'linear-gradient(135deg, #2d7a5e, #34d399)' } : undefined}
+            >
+              {aba.label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+            filtrosAtivos > 0
+              ? 'bg-[#2d7a5e] text-white shadow-md'
+              : 'bg-white/70 text-[#9a9590] hover:text-[#4a6b5d] border border-[#ece8e1]'
+          }`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+          </svg>
+          Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
+        </button>
+
+        {filtrosAtivos > 0 && (
+          <button
+            onClick={limparFiltros}
+            className="text-[12px] font-bold text-red-400 hover:text-red-600 transition-colors"
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
+      {/* Painel de filtros demográficos */}
+      {mostrarFiltros && (
+        <div className="admin-card mb-6 animate-slide-up">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(FILTROS_DEMOGRAFICOS).map(([campo, opcoes]) => (
+              <div key={campo}>
+                <label className="block text-[11px] text-[#9a9590] uppercase tracking-wider font-bold mb-1.5">
+                  {campo === 'genero' ? 'Genero' : campo === 'faixaEtaria' ? 'Faixa Etaria' : campo === 'frequenciaAulas' ? 'Frequencia' : 'Funcao Ensino'}
+                </label>
+                <select
+                  value={filtros[campo] || ''}
+                  onChange={(e) => handleFiltroChange(campo, e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#ece8e1] bg-white text-[13px] text-[#2d2a26] font-semibold focus:outline-none focus:ring-2 focus:ring-[#2d7a5e]/20 focus:border-[#2d7a5e] transition-all"
+                >
+                  {opcoes.map((op) => (
+                    <option key={op.valor} value={op.valor}>{op.label}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="hidden">
+      {/* Abas de jornada (agora inline acima) */}
       <div className="flex gap-1 rounded-xl p-1 w-fit mb-6" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(45,42,38,0.04)' }}>
         {ABAS.map((aba) => (
           <button
@@ -344,6 +465,7 @@ export default function AdminDashboard() {
             {aba.label}
           </button>
         ))}
+      </div>
       </div>
 
       {/* Alertas */}

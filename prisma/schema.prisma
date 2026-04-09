@@ -32,6 +32,7 @@ model Professor {
   genero        String?
   faixaEtaria   String?
   frequenciaAulas String?
+  funcaoEnsino  String?  // "primaria" | "secundaria"
   escolaId      String?
   escola        Escola?  @relation(fields: [escolaId], references: [id])
   criadoEm      DateTime @default(now())

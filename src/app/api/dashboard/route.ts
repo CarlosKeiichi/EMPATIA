@@ -11,6 +11,7 @@ import {
   calcularBurnoutRelacional,
   calcularInteligenciaEmocional,
   calcularEstiloComunicacao,
+  BLOCOS_TESTE,
 } from '@/lib/scoring';
 
 // GET /api/dashboard - Dados do dashboard administrativo
@@ -28,9 +29,21 @@ export async function GET(req: NextRequest) {
     // Filtro por jornada (query param)
     const jornadaFiltro = req.nextUrl.searchParams.get('jornada'); // 'trabalho' | 'relacionamentos' | 'financas' | null
 
+    // Filtros demográficos
+    const generoFiltro = req.nextUrl.searchParams.get('genero');
+    const faixaEtariaFiltro = req.nextUrl.searchParams.get('faixaEtaria');
+    const frequenciaFiltro = req.nextUrl.searchParams.get('frequenciaAulas');
+    const funcaoEnsinoFiltro = req.nextUrl.searchParams.get('funcaoEnsino');
+
     // Buscar jornadas concluídas
     const filtro: Record<string, unknown> = { status: 'concluida' };
-    if (escolaId) filtro.professor = { escolaId };
+    const filtroProfessor: Record<string, unknown> = {};
+    if (escolaId) filtroProfessor.escolaId = escolaId;
+    if (generoFiltro) filtroProfessor.genero = generoFiltro;
+    if (faixaEtariaFiltro) filtroProfessor.faixaEtaria = faixaEtariaFiltro;
+    if (frequenciaFiltro) filtroProfessor.frequenciaAulas = frequenciaFiltro;
+    if (funcaoEnsinoFiltro) filtroProfessor.funcaoEnsino = funcaoEnsinoFiltro;
+    if (Object.keys(filtroProfessor).length > 0) filtro.professor = filtroProfessor;
     if (jornadaFiltro) filtro.tipo = jornadaFiltro;
 
     const jornadas = await prisma.jornada.findMany({
@@ -78,10 +91,15 @@ export async function GET(req: NextRequest) {
       ? ibedValues.reduce((a, b) => a + b.diferenca, 0) / ibedValues.length
       : 0;
 
-    // Estresse médio normalizado
-    const pontuacoes = jornadas.map((j) => j.pontuacaoTotal ?? 0);
-    const estresseMedio = pontuacoes.length > 0
-      ? pontuacoes.reduce((a, b) => a + b, 0) / pontuacoes.length / 20
+    // Estresse médio normalizado (0-1)
+    // Usar média das respostas conversacionais (0-10), excluindo testes estruturados
+    const respostasConversacionais = jornadas.flatMap((j) =>
+      j.respostas
+        .filter((r) => r.pontuacao !== null && !BLOCOS_TESTE.includes(r.bloco))
+        .map((r) => r.pontuacao!)
+    );
+    const estresseMedio = respostasConversacionais.length > 0
+      ? respostasConversacionais.reduce((a, b) => a + b, 0) / respostasConversacionais.length / 10
       : 0;
 
     // Percentual de docentes em estado crítico (D ou E)
@@ -142,7 +160,7 @@ export async function GET(req: NextRequest) {
 
     // Taxa abandono
     const filtroAbandono: Record<string, unknown> = {};
-    if (escolaId) filtroAbandono.professor = { escolaId };
+    if (Object.keys(filtroProfessor).length > 0) filtroAbandono.professor = filtroProfessor;
     if (jornadaFiltro) filtroAbandono.tipo = jornadaFiltro;
     const todasJornadas = await prisma.jornada.findMany({
       where: filtroAbandono,

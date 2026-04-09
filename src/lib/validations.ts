@@ -14,6 +14,7 @@ export const registroSchema = z.object({
   genero: z.string().optional(),
   faixaEtaria: z.string().optional(),
   frequenciaAulas: z.string().optional(),
+  funcaoEnsino: z.string().optional(),
   escolaId: z.string().optional(),
 });
 
