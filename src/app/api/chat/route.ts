@@ -73,12 +73,16 @@ export async function POST(req: NextRequest) {
     let contextoFinal = contexto || '';
 
     if (configNome === 'marcia_suporte') {
-      const professor = await prisma.professor.findUnique({ where: { userId: usuario.userId } });
-      if (professor) {
-        const memoria = await construirMemoriaMarcia(professor.id);
-        if (memoria) {
-          contextoFinal = memoria + (contextoFinal ? `\n\n${contextoFinal}` : '');
+      try {
+        const professor = await prisma.professor.findUnique({ where: { userId: usuario.userId } });
+        if (professor) {
+          const memoria = await construirMemoriaMarcia(professor.id);
+          if (memoria) {
+            contextoFinal = memoria + (contextoFinal ? `\n\n${contextoFinal}` : '');
+          }
         }
+      } catch (memErr) {
+        console.error('Erro ao construir memória (continuando sem):', memErr);
       }
     }
 
