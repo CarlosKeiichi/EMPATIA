@@ -6,14 +6,14 @@ import { usePathname } from 'next/navigation';
 export default function BotaoCrise() {
   const [aberto, setAberto] = useState(false);
   const pathname = usePathname();
-  const naJornada = pathname === '/professor/jornada';
+  const temInputFixo = pathname === '/professor/jornada' || pathname === '/professor/chat';
 
   return (
     <>
       {/* Botao flutuante */}
       <button
         onClick={() => setAberto(true)}
-        className={`fixed ${naJornada ? 'bottom-20' : 'bottom-6'} right-6 z-50 flex items-center gap-2 bg-[#c94040] hover:bg-[#b53535] text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group print:hidden`}
+        className={`fixed ${temInputFixo ? 'bottom-20' : 'bottom-6'} right-6 z-50 flex items-center gap-2 bg-[#c94040] hover:bg-[#b53535] text-white pl-3.5 pr-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group print:hidden`}
         aria-label="Preciso de ajuda agora"
       >
         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
