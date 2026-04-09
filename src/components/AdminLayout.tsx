@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import Logo from '@/components/Logo';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: (
@@ -87,7 +87,7 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] font-[Nunito]">
+    <div className="min-h-screen bg-warm-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -98,21 +98,15 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[250px] bg-white z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 shadow-[1px_0_0_#ece8e1] ${
+        className={`fixed top-0 left-0 h-full w-[250px] bg-white z-50 flex flex-col transition-transform duration-300 lg:translate-x-0 shadow-[1px_0_0_theme(colors.primary.100)] ${
           sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
         <div className="px-5 py-5">
           <div className="flex items-center gap-2.5">
-            <Image
-              src="/logos/logo-icone.png"
-              alt="EmpatIA"
-              width={34}
-              height={34}
-              className="flex-shrink-0"
-            />
-            <span className="font-extrabold text-[#2d4a3e] text-[17px] tracking-tight">EMPATIA</span>
+            <Logo size={34} />
+            <span className="font-extrabold text-primary-800 text-[17px] tracking-tight">EMPATIA</span>
           </div>
         </div>
 
@@ -127,11 +121,11 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-semibold transition-all duration-200 ${
                   active
-                    ? 'bg-[#e8f5ee] text-[#2d7a5e]'
-                    : 'text-[#7a7a72] hover:bg-[#f5f3ef] hover:text-[#4a6b5d]'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-warm-500 hover:bg-warm-50 hover:text-primary-700'
                 }`}
               >
-                <span className={active ? 'text-[#2d7a5e]' : 'text-[#a3a29a]'}>
+                <span className={active ? 'text-primary-600' : 'text-warm-400'}>
                   {item.icon}
                 </span>
                 {item.label}
@@ -141,27 +135,27 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
         </nav>
 
         {/* School info */}
-        <div className="mx-3 mb-3 rounded-xl bg-[#faf8f5] border border-[#ece8e1] p-4">
-          <p className="font-bold text-[#2d2a26] text-[13px]">{escola?.nome || 'Escola'}</p>
+        <div className="mx-3 mb-3 rounded-xl bg-primary-50/40 border border-primary-100/50 p-4">
+          <p className="font-bold text-primary-900 text-[13px]">{escola?.nome || 'Escola'}</p>
           <div className="mt-2.5 space-y-1.5">
             <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-[#9a9590]">Professores:</span>
-              <span className="font-bold text-[#4a4842]">{escola?.professores || '—'}</span>
+              <span className="text-warm-500">Professores:</span>
+              <span className="font-bold text-primary-800">{escola?.professores || '—'}</span>
             </div>
             <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-[#9a9590]">Genero:</span>
-              <span className="font-bold text-[#4a4842]">{escola?.genero || '—'}</span>
+              <span className="text-warm-500">Genero:</span>
+              <span className="font-bold text-primary-800">{escola?.genero || '—'}</span>
             </div>
             <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-[#9a9590]">Faixa etaria:</span>
-              <span className="font-bold text-[#4a4842]">{escola?.faixaEtaria || '—'}</span>
+              <span className="text-warm-500">Faixa etaria:</span>
+              <span className="font-bold text-primary-800">{escola?.faixaEtaria || '—'}</span>
             </div>
           </div>
         </div>
 
         {/* Suporte + Sair */}
         <div className="px-3 pb-4 space-y-1">
-          <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-bold bg-[#2d7a5e] text-white hover:bg-[#24674f] transition-colors">
+          <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 18a8 8 0 100-16 8 8 0 000 16z" />
               <path d="M10 14v-1M7.5 7.5a2.5 2.5 0 014.6 1.3c0 1.7-2.6 1.7-2.6 3.2" />
@@ -170,7 +164,7 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-semibold text-[#a3a29a] hover:bg-[#fef2f2] hover:text-[#dc6b6b] transition-all duration-200"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-semibold text-warm-400 hover:bg-red-50 hover:text-red-500 transition-all duration-200"
           >
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 3h3a1 1 0 011 1v12a1 1 0 01-1 1h-3M8 17l-5-5 5-5M3 12h12" />
@@ -183,38 +177,38 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
       {/* Main content */}
       <div className="lg:pl-[250px] min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-[#faf8f5]/90 backdrop-blur-md">
+        <header className="sticky top-0 z-30 bg-warm-50/90 backdrop-blur-md">
           <div className="flex items-center justify-between px-5 lg:px-8 h-[60px]">
             <div className="flex items-center gap-3">
               {/* Mobile menu */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-1.5 rounded-lg hover:bg-[#ece8e1] text-[#7a7a72] transition-colors"
+                className="lg:hidden p-1.5 rounded-lg hover:bg-primary-50 text-warm-500 transition-colors"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M3 6h18M3 12h18M3 18h18" />
                 </svg>
               </button>
               <div>
-                <h1 className="text-[17px] font-extrabold text-[#2d2a26] tracking-tight">{titulo}</h1>
-                {subtitulo && <p className="text-[11.5px] text-[#9a9590] font-medium -mt-0.5">{subtitulo}</p>}
+                <h1 className="text-[17px] font-extrabold text-primary-950 tracking-tight">{titulo}</h1>
+                {subtitulo && <p className="text-[11.5px] text-warm-500 font-medium -mt-0.5">{subtitulo}</p>}
               </div>
             </div>
 
             {/* Right: notification + avatar */}
             <div className="flex items-center gap-2">
-              <button className="p-2 rounded-xl hover:bg-[#ece8e1] text-[#9a9590] hover:text-[#4a4842] transition-colors relative">
+              <button className="p-2 rounded-xl hover:bg-primary-50 text-warm-400 hover:text-primary-700 transition-colors relative">
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 6.5A5 5 0 005 6.5c0 5.5-2.5 7-2.5 7h15S15 12 15 6.5zM8.5 16.5a2 2 0 003 0" />
                 </svg>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#e57a5a] rounded-full" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emotion-overwhelm rounded-full" />
               </button>
-              <div className="w-8 h-8 rounded-full bg-[#2d7a5e] flex items-center justify-center text-white text-xs font-bold ml-1">
+              <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold ml-1">
                 A
               </div>
             </div>
           </div>
-          <div className="h-px bg-[#ece8e1]" />
+          <div className="h-px bg-primary-100/50" />
         </header>
 
         {/* Page content */}
