@@ -102,9 +102,13 @@ export async function GET(req: NextRequest) {
       ? respostasConversacionais.reduce((a, b) => a + b, 0) / respostasConversacionais.length / 10
       : 0;
 
-    // Percentual de docentes em estado crítico (D ou E)
-    const criticos = estadosFinais.filter((e) => e === 'D' || e === 'E').length;
-    const percentualCriticos = totalProfessores > 0 ? criticos / totalProfessores : 0;
+    // Percentual de docentes únicos em estado crítico (D ou E)
+    const professoresCriticos = new Set(
+      jornadas
+        .filter((j) => j.estadoEmocionalFinal === 'D' || j.estadoEmocionalFinal === 'E')
+        .map((j) => j.professorId)
+    ).size;
+    const percentualCriticos = totalProfessores > 0 ? professoresCriticos / totalProfessores : 0;
 
     // IRPE
     const irpe = calcularIRPE({
@@ -210,13 +214,6 @@ export async function GET(req: NextRequest) {
         : jornadas.filter((j) => j.tipo === 'relacionamentos');
 
       if (jornadasRel.length > 0) {
-        // Inteligência Emocional — respostas do bloco inteligencia_emocional_teste
-        const ieRespostas = jornadasRel.flatMap((j) =>
-          j.respostas
-            .filter((r) => r.bloco === 'inteligencia_emocional_teste')
-            .map((r) => parseInt(r.valor) || 0)
-        );
-
         // IE por jornada (soma das 15 respostas)
         const iePorJornada: number[] = [];
         for (const j of jornadasRel) {

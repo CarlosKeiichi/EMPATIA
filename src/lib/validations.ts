@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  senha: z.string().min(4, 'Senha deve ter pelo menos 4 caracteres'),
+  senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   acao: z.enum(['login', 'registro']).optional(),
 });
 
@@ -11,10 +11,10 @@ export const registroSchema = z.object({
   senha: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   acao: z.literal('registro'),
-  genero: z.string().optional(),
-  faixaEtaria: z.string().optional(),
-  frequenciaAulas: z.string().optional(),
-  funcaoEnsino: z.string().optional(),
+  genero: z.enum(['feminino', 'masculino', 'nao_binario', 'prefiro_nao_dizer']).optional(),
+  faixaEtaria: z.enum(['20-29', '30-39', '40-49', '50-59', '60+']).optional(),
+  frequenciaAulas: z.enum(['integral', 'parcial', 'eventual']).optional(),
+  funcaoEnsino: z.enum(['primaria', 'secundaria']).optional(),
   escolaId: z.string().optional(),
 });
 

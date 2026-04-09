@@ -320,11 +320,9 @@ IMPORTANTE:
       }
     }
 
-    // Adicionar ao tracking local
-    setRespostas((prev) => [
-      ...prev,
-      ...respostasTeste.map((r) => ({ etapa: r.perguntaId, valor: r.valor, bloco: r.bloco })),
-    ]);
+    // NÃO adicionar respostas de teste ao state local —
+    // elas já foram salvas no banco via PUT acima.
+    // Evita duplicação ao finalizar jornada.
 
     // Montar resumo para Márcia
     const resumo = respostasTeste
@@ -350,7 +348,7 @@ IMPORTANTE:
   const mostrarEscala = !testeAtivo && ultimaMsgIA && /(?:0\s*a\s*10|escala|nota|pontue|avalie.*número)/i.test(ultimaMsgIA.conteudo);
 
   async function iniciarTestePendente() {
-    if (testesPendentes.length === 0) return;
+    if (testesPendentes.length === 0 || testeAtivo) return;
     const testeId = testesPendentes[0];
     try {
       const res = await fetch(`/api/jornada/teste?id=${testeId}`);
@@ -387,19 +385,25 @@ IMPORTANTE:
     setFinalizando(true);
 
     try {
+      // Respostas de testes estruturados já foram salvas via finalizarTeste.
+      // Aqui enviamos apenas respostas conversacionais (escala 0-10 + texto livre).
+      const respostasConversacionais = respostas
+        .filter((r) => r.valor.trim() !== '')
+        .map((r, i) => ({
+          perguntaId: `chat_${i}`,
+          bloco: tipoJornada || 'geral',
+          pergunta: `Resposta conversacional ${i + 1}`,
+          tipo: 'aberta' as const,
+          valor: r.valor,
+          pontuacao: isNaN(Number(r.valor)) ? null : Number(r.valor),
+        }));
+
       const res = await fetch('/api/jornada', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jornadaId,
-          respostas: respostas.map((r, i) => ({
-            perguntaId: `pergunta_${i}`,
-            bloco: r.bloco,
-            pergunta: `Pergunta ${i + 1}`,
-            tipo: 'aberta',
-            valor: r.valor,
-            pontuacao: isNaN(Number(r.valor)) ? null : Number(r.valor),
-          })),
+          respostas: respostasConversacionais.length > 0 ? respostasConversacionais : [{ perguntaId: 'finalizar', bloco: tipoJornada || 'geral', pergunta: 'Finalização', tipo: 'aberta', valor: 'finalizar', pontuacao: null }],
           finalizar: true,
         }),
       });

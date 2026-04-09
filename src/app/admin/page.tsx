@@ -300,16 +300,16 @@ export default function AdminDashboard() {
 
   const filtrosAtivos = Object.values(filtros).filter(Boolean).length;
 
-  const carregarDados = useCallback(async (jornada?: string, filtrosDemog?: Record<string, string>) => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const carregarDados = useCallback(async (jornada: string, filtrosDemog: Record<string, string>) => {
     setCarregando(true);
     try {
       const params = new URLSearchParams();
       if (jornada && jornada !== 'geral') params.set('jornada', jornada);
-      const f = filtrosDemog || filtros;
-      if (f.genero) params.set('genero', f.genero);
-      if (f.faixaEtaria) params.set('faixaEtaria', f.faixaEtaria);
-      if (f.frequenciaAulas) params.set('frequenciaAulas', f.frequenciaAulas);
-      if (f.funcaoEnsino) params.set('funcaoEnsino', f.funcaoEnsino);
+      if (filtrosDemog.genero) params.set('genero', filtrosDemog.genero);
+      if (filtrosDemog.faixaEtaria) params.set('faixaEtaria', filtrosDemog.faixaEtaria);
+      if (filtrosDemog.frequenciaAulas) params.set('frequenciaAulas', filtrosDemog.frequenciaAulas);
+      if (filtrosDemog.funcaoEnsino) params.set('funcaoEnsino', filtrosDemog.funcaoEnsino);
       const qs = params.toString();
       const url = `/api/dashboard${qs ? `?${qs}` : ''}`;
       const res = await fetch(url);
@@ -320,22 +320,18 @@ export default function AdminDashboard() {
     } finally {
       setCarregando(false);
     }
-  }, [filtros]);
+  }, []);
 
   useEffect(() => {
-    carregarDados(abaAtiva);
-  }, [abaAtiva, carregarDados]);
+    carregarDados(abaAtiva, filtros);
+  }, [abaAtiva, filtros, carregarDados]);
 
   function handleFiltroChange(campo: string, valor: string) {
-    const novosFiltros = { ...filtros, [campo]: valor };
-    setFiltros(novosFiltros);
-    carregarDados(abaAtiva, novosFiltros);
+    setFiltros((prev) => ({ ...prev, [campo]: valor }));
   }
 
   function limparFiltros() {
-    const vazio = { genero: '', faixaEtaria: '', frequenciaAulas: '', funcaoEnsino: '' };
-    setFiltros(vazio);
-    carregarDados(abaAtiva, vazio);
+    setFiltros({ genero: '', faixaEtaria: '', frequenciaAulas: '', funcaoEnsino: '' });
   }
 
   if (carregando) {
@@ -364,7 +360,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-[#2d2a26] font-bold">Erro ao carregar dados</p>
             <p className="text-[#9a9590] text-sm mt-1">Verifique a conexao e tente novamente.</p>
-            <button onClick={() => carregarDados(abaAtiva)} className="mt-4 px-5 py-2 bg-[#2d7a5e] text-white text-sm font-bold rounded-xl hover:bg-[#24674f] transition-colors">
+            <button onClick={() => carregarDados(abaAtiva, filtros)} className="mt-4 px-5 py-2 bg-[#2d7a5e] text-white text-sm font-bold rounded-xl hover:bg-[#24674f] transition-colors">
               Tentar novamente
             </button>
           </div>
@@ -448,26 +444,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="hidden">
-      {/* Abas de jornada (agora inline acima) */}
-      <div className="flex gap-1 rounded-xl p-1 w-fit mb-6" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 1px 3px rgba(45,42,38,0.04)' }}>
-        {ABAS.map((aba) => (
-          <button
-            key={aba.id}
-            onClick={() => setAbaAtiva(aba.id)}
-            className={`px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all duration-200 ${
-              abaAtiva === aba.id
-                ? 'text-white shadow-md'
-                : 'text-[#9a9590] hover:text-[#4a6b5d] hover:bg-white/50'
-            }`}
-            style={abaAtiva === aba.id ? { background: 'linear-gradient(135deg, #2d7a5e, #34d399)' } : undefined}
-          >
-            {aba.label}
-          </button>
-        ))}
-      </div>
-      </div>
-
       {/* Alertas */}
       {dados.alertas && dados.alertas.length > 0 && (
         <div className="space-y-3 mb-7 animate-fade-in">
@@ -504,7 +480,7 @@ export default function AdminDashboard() {
         <DashboardRelacionamentos dados={dados} totalEmocional={totalEmocional} pieData={pieData} />
       ) : (
         /* ==================== ABA GERAL / TRABALHO ==================== */
-        <DashboardGeralTrabalho dados={dados} totalEmocional={totalEmocional} pieData={pieData} abaAtiva={abaAtiva} carregarDados={() => carregarDados(abaAtiva)} />
+        <DashboardGeralTrabalho dados={dados} totalEmocional={totalEmocional} pieData={pieData} abaAtiva={abaAtiva} carregarDados={() => carregarDados(abaAtiva, filtros)} />
       )}
     </AdminLayout>
   );

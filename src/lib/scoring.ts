@@ -274,11 +274,12 @@ export function extrairTopProblemas(
 }
 
 // Escala máxima por bloco (para normalização ao radar 0-10)
-const ESCALA_MAX_BLOCO: Record<string, number> = {
+// null = categórico, excluir do radar
+const ESCALA_MAX_BLOCO: Record<string, number | null> = {
   estresse_ocupacional: 2,          // frequência: nunca=0, às_vezes=1, frequentemente=2
   burnout_relacional_teste: 3,      // frequência: nunca=0..quase_sempre=3
   inteligencia_emocional_teste: 5,  // likert 1-5
-  estilo_comunicacao: 0,            // categórico — excluir do radar
+  estilo_comunicacao: null,         // categórico — excluir do radar
 };
 // Todos os outros blocos (conversacionais) usam escala 0-10
 
@@ -305,18 +306,24 @@ export function calcularRadarEstresse(
     grupos[r.bloco].push(r.pontuacao);
   }
 
-  return Object.entries(grupos).map(([bloco, valores]) => {
-    const media = valores.reduce((a, b) => a + b, 0) / valores.length;
-    const escalaMax = ESCALA_MAX_BLOCO[bloco];
-    // Normalizar para 0-10 se o bloco tem escala diferente
-    const valorNorm = escalaMax && escalaMax !== 10
-      ? Math.min(10, (media / escalaMax) * 10)
-      : Math.min(10, media);
-    return {
-      dimensao: formatarNomeBloco(bloco),
-      valor: Math.round(valorNorm * 10) / 10,
-    };
-  });
+  return Object.entries(grupos)
+    .filter(([bloco]) => {
+      // Excluir blocos categóricos (escalaMax === null) do radar
+      const escala = ESCALA_MAX_BLOCO[bloco];
+      return escala !== null;
+    })
+    .map(([bloco, valores]) => {
+      const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+      const escalaMax = ESCALA_MAX_BLOCO[bloco];
+      // Normalizar para 0-10 se o bloco tem escala diferente de 10
+      const valorNorm = escalaMax != null && escalaMax !== 10
+        ? Math.min(10, (media / escalaMax) * 10)
+        : Math.min(10, media);
+      return {
+        dimensao: formatarNomeBloco(bloco),
+        valor: Math.round(valorNorm * 10) / 10,
+      };
+    });
 }
 
 function formatarNomeBloco(bloco: string): string {
