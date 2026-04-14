@@ -870,6 +870,31 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
   // Se radar vazio, usar todos os dados de estresse disponíveis
   const radarData = radarRelacional.length > 0 ? radarRelacional : dados.radarEstresse;
 
+  // Dimensões relacionais agrupadas para gráfico de barras com risco
+  const MAPA_DIMENSAO_REL: Record<string, string> = {
+    'Autocuidado': 'Relação intrapessoal',
+    'Vínculos Familiares': 'Relações familiares',
+    'Rede de Apoio': 'Relações interpessoais',
+  };
+  const dimensoesRelacionais = radarData
+    .filter((r) => Object.keys(MAPA_DIMENSAO_REL).some((k) => r.dimensao.includes(k.slice(0, 6))))
+    .map((r) => {
+      const label = Object.entries(MAPA_DIMENSAO_REL).find(([k]) => r.dimensao.includes(k.slice(0, 6)))?.[1] || r.dimensao;
+      return { dimensao: label, valor: r.valor };
+    });
+
+  function corRisco(valor: number): string {
+    if (valor >= 7) return '#ef4444'; // vermelho — alto risco
+    if (valor >= 4) return '#f59e0b'; // amarelo — atenção
+    return '#22c55e'; // verde — baixo risco
+  }
+
+  function labelRisco(valor: number): string {
+    if (valor >= 7) return 'Alto risco';
+    if (valor >= 4) return 'Atenção';
+    return 'Baixo risco';
+  }
+
   return (
     <>
       {/* KPI Row */}
@@ -953,6 +978,44 @@ function DashboardRelacionamentos({ dados, totalEmocional, pieData }: {
           )}
         </ChartCard>
       </div>
+
+      {/* Relacional por Dimensão — Classificação por Risco */}
+      {dimensoesRelacionais.length > 0 && (
+        <div className="mb-4 stagger-children">
+          <ChartCard title="Relacional por Dimensão" subtitle="Classificação por nível de risco (0-10)">
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={dimensoesRelacionais} barCategoryGap={24}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ede8f7" vertical={false} />
+                <XAxis
+                  dataKey="dimensao"
+                  tick={{ fontSize: 11.5, fill: '#6d5f53', fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[0, 10]}
+                  tick={{ fontSize: 11, fill: '#a99889' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={35}
+                  label={{ value: 'Pontuação Média (0 a 10)', angle: -90, position: 'insideLeft', offset: -5, style: { fontSize: 10, fill: '#a99889', fontWeight: 600 } }}
+                />
+                <Tooltip content={<ChartTooltip />} />
+                <Bar dataKey="valor" radius={[6, 6, 0, 0]} barSize={52} label={{ position: 'top', fontSize: 13, fontWeight: 800, fill: '#2d2b3a' }}>
+                  {dimensoesRelacionais.map((entry, i) => (
+                    <Cell key={i} fill={corRisco(entry.valor)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex items-center justify-center gap-6 mt-3 text-[11px] font-semibold">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" /> Baixo risco (≤3)</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" /> Atenção (4-6)</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" /> Alto risco (≥7)</span>
+            </div>
+          </ChartCard>
+        </div>
+      )}
 
       {/* Estilo de Comunicacao + IE Gauge */}
       <div className="grid lg:grid-cols-2 gap-4 mb-4 stagger-children">
