@@ -3,6 +3,838 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+/* ================================================== */
+/* RELATÓRIO NR-1 — PGR READY                          */
+/* ================================================== */
+.nr1-report {
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  color: #1a2e28;
+  line-height: 1.5;
+}
+
+.nr1-page {
+  background: white;
+  padding: 48px 56px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  border: 1px solid #e8e2d5;
+  page-break-after: always;
+  max-width: 850px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nr1-page:last-child {
+  page-break-after: auto;
+}
+
+/* CAPA */
+.nr1-capa {
+  min-height: 900px;
+  display: flex;
+  flex-direction: column;
+}
+.nr1-capa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 64px;
+}
+.nr1-logo {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 24px;
+  color: #1a2e28;
+}
+.nr1-logo .italic {
+  font-style: italic;
+  color: #2D5A4B;
+}
+.nr1-badge {
+  background: linear-gradient(90deg, #8fbea3, #6ea383);
+  color: #1a2e28;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.nr1-capa-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0;
+}
+.nr1-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #2D5A4B;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+.nr1-titulo-capa {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 52px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  margin: 0 0 24px;
+  color: #0e1f1a;
+}
+.nr1-titulo-capa .italic {
+  font-style: italic;
+  color: #2D5A4B;
+}
+.nr1-subtitulo {
+  font-size: 13px;
+  color: #4a5f58;
+  max-width: 520px;
+  line-height: 1.55;
+  margin: 0;
+}
+.nr1-divider {
+  border: none;
+  border-top: 1px solid #e8e2d5;
+  margin: 24px 0;
+}
+.nr1-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin: 8px 0 24px;
+}
+.nr1-meta-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #2D5A4B;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+.nr1-meta-valor {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0e1f1a;
+  margin: 0;
+}
+.nr1-meta-valor-pequeno {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2D5A4B;
+  margin: 0;
+}
+.nr1-instrucao-sst {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #f7f5ef;
+  border-left: 3px solid #2D5A4B;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+.nr1-instrucao-sst p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #4a5f58;
+}
+.nr1-instrucao-sst svg { flex-shrink: 0; margin-top: 2px; }
+.nr1-capa-footer {
+  margin-top: auto;
+}
+.nr1-footer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: #7a8580;
+}
+
+/* HEADERS DAS PÁGINAS */
+.nr1-h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+  color: #0e1f1a;
+}
+
+/* ALERTA CRÍTICO */
+.nr1-alerta-critico {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+.nr1-alerta-icon {
+  font-size: 16px;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+.nr1-alerta-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: #991b1b;
+  margin: 0 0 4px;
+}
+.nr1-alerta-sub {
+  font-size: 11.5px;
+  color: #991b1b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* STATUS CARD */
+.nr1-status-card {
+  background: #0e1f1a;
+  color: white;
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0 24px;
+}
+.nr1-status-card > svg { flex-shrink: 0; }
+.nr1-status-titulo {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0 0 4px;
+  color: white;
+}
+.nr1-status-texto {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.5;
+  margin: 0;
+}
+.nr1-status-check {
+  text-align: center;
+  flex-shrink: 0;
+}
+.nr1-status-check p {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #8fbea3;
+  margin: 4px 0 0;
+}
+
+/* METODOLOGIA */
+.nr1-metodologia {
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.nr1-metodologia-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #0e1f1a;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e2d5;
+}
+.nr1-metodologia-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 24px;
+}
+.nr1-inst-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #2D5A4B;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+.nr1-inst-texto {
+  font-size: 11.5px;
+  color: #4a5f58;
+  line-height: 1.5;
+  margin: 0;
+}
+.nr1-inst-texto strong { color: #0e1f1a; }
+.nr1-nota-tecnica {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #eef5ef;
+  border-radius: 6px;
+  font-size: 10.5px;
+  color: #2D5A4B;
+  line-height: 1.5;
+}
+
+/* INDICADORES */
+.nr1-indicadores-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.nr1-ind-card {
+  background: #eef5ef;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: left;
+}
+.nr1-ind-valor {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: #2D5A4B;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.nr1-ind-label {
+  font-size: 10.5px;
+  color: #4a5f58;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+.nr1-ind-sub {
+  font-size: 9.5px;
+  font-weight: 700;
+  margin-top: 3px;
+  color: #7a8580;
+}
+
+/* TABELAS */
+.nr1-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+.nr1-tabela thead th {
+  background: #f7f5ef;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #4a5f58;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e8e2d5;
+}
+.nr1-tabela tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #f0ebe0;
+  vertical-align: top;
+  color: #4a5f58;
+}
+.nr1-tabela tbody td strong { color: #0e1f1a; }
+.nr1-cod {
+  font-weight: 700;
+  color: #2D5A4B !important;
+}
+.nr1-td-sub {
+  font-size: 10.5px;
+  color: #7a8580;
+  margin-top: 2px;
+}
+.nr1-td-evidencia {
+  font-size: 10.5px;
+  max-width: 250px;
+  line-height: 1.5;
+}
+.nr1-tabela-compacta {
+  font-size: 12px;
+}
+.nr1-tabela-compacta td { padding: 14px 12px; }
+.nr1-plano-tabela {
+  font-size: 10.5px;
+}
+.nr1-plano-tabela td {
+  padding: 12px 10px;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.nr1-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2D5A4B;
+  color: white;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* TAGS */
+.nr1-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.nr1-tag-alta { background: #fee2e2; color: #b91c1c; }
+.nr1-tag-media { background: #fef3c7; color: #92400e; }
+.nr1-tag-baixa { background: #dcfce7; color: #166534; }
+
+.nr1-risco {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.nr1-risco-alto { background: #fef2f2; color: #dc2626; }
+.nr1-risco-medio { background: #fef9c3; color: #a16207; }
+.nr1-risco-baixo { background: #f0fdf4; color: #166534; }
+
+.nr1-legenda {
+  font-size: 10.5px;
+  color: #7a8580;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* PERFIL EMOCIONAL */
+.nr1-perfil-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.nr1-perfil-card {
+  background: #fdfcf9;
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.nr1-perfil-titulo {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #0e1f1a;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0ebe0;
+}
+.nr1-emocao-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nr1-emocao-linha {
+  display: grid;
+  grid-template-columns: 130px 1fr 40px 50px;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+.nr1-emocao-nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a5f58;
+  font-weight: 500;
+}
+.nr1-emocao-emoji { font-size: 14px; }
+.nr1-emocao-bar-container {
+  height: 6px;
+  background: #f0ebe0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.nr1-emocao-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+.nr1-emocao-perc {
+  font-weight: 700;
+  color: #0e1f1a;
+  text-align: right;
+  font-size: 12px;
+}
+.nr1-emocao-qtd {
+  font-size: 10.5px;
+  color: #7a8580;
+  text-align: right;
+}
+.nr1-perfil-alert {
+  font-size: 10.5px;
+  color: #dc2626;
+  font-weight: 700;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #f0ebe0;
+}
+
+/* IPCS CENTRAL */
+.nr1-ipcs-central {
+  text-align: center;
+  padding: 8px 0 12px;
+}
+.nr1-ipcs-valor {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 46px;
+  font-weight: 400;
+  color: #d97706;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.nr1-ipcs-max {
+  font-size: 22px;
+  color: #7a8580;
+}
+.nr1-ipcs-zona {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #d97706;
+  margin: 4px 0 2px;
+}
+.nr1-ipcs-sub {
+  font-size: 10.5px;
+  color: #7a8580;
+  margin: 0;
+}
+.nr1-ipcs-dist {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0ebe0;
+}
+.nr1-ipcs-dist-num {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+.nr1-ipcs-dist-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 4px 0 2px;
+  color: #4a5f58;
+}
+.nr1-ipcs-dist-range {
+  font-size: 9px;
+  color: #7a8580;
+}
+
+/* IRPE */
+.nr1-irpe-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+.nr1-irpe-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #dc2626;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+.nr1-irpe-valor {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 42px;
+  font-weight: 400;
+  color: #dc2626;
+  line-height: 1;
+  margin: 0;
+}
+.nr1-irpe-nivel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #dc2626;
+  margin: 4px 0 8px;
+}
+.nr1-irpe-sub {
+  font-size: 11px;
+  color: #991b1b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Barra nos dimensões */
+.nr1-bar-container {
+  height: 8px;
+  background: #f0ebe0;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+}
+.nr1-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+/* Comunicação + IE */
+.nr1-comunic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.nr1-comunic-card {
+  background: #fdfcf9;
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.nr1-comunic-texto {
+  font-size: 10.5px;
+  color: #4a5f58;
+  line-height: 1.5;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #f0ebe0;
+}
+
+/* Nuvem */
+.nr1-nuvem-card {
+  background: #fdfcf9;
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.nr1-nuvem-legenda {
+  font-size: 10.5px;
+  color: #7a8580;
+  font-style: italic;
+  margin: 0 0 14px;
+  text-align: center;
+}
+.nr1-nuvem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+.nr1-nuvem-palavra {
+  color: #2D5A4B;
+  line-height: 1.1;
+}
+
+/* Marcia box */
+.nr1-marcia-box {
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.nr1-marcia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nr1-marcia-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: #0e1f1a;
+}
+.nr1-marcia-online {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2D5A4B;
+}
+.nr1-marcia-sub {
+  font-size: 10.5px;
+  color: #7a8580;
+  margin: 4px 0 14px;
+}
+.nr1-marcia-bloco {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+.nr1-marcia-diagnostico {
+  background: #fef2f2;
+  border-left: 3px solid #dc2626;
+}
+.nr1-marcia-positivo {
+  background: #eef5ef;
+  border-left: 3px solid #2D5A4B;
+}
+.nr1-marcia-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+.nr1-marcia-diagnostico .nr1-marcia-label { color: #dc2626; }
+.nr1-marcia-positivo .nr1-marcia-label { color: #2D5A4B; }
+.nr1-marcia-texto {
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin: 0;
+  color: #0e1f1a;
+}
+
+/* Arquivo */
+.nr1-arquivo-box {
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+.nr1-arquivo-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.nr1-arquivo-main > svg { flex-shrink: 0; margin-top: 4px; }
+.nr1-arquivo-titulo {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #0e1f1a;
+}
+.nr1-arquivo-texto {
+  font-size: 10.5px;
+  color: #4a5f58;
+  line-height: 1.5;
+  margin: 0;
+}
+.nr1-arquivo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-left: 1px solid #e8e2d5;
+  padding-left: 20px;
+}
+
+/* Assinaturas */
+.nr1-assinaturas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.nr1-assinatura-card {
+  background: #fdfcf9;
+  border: 1px solid #e8e2d5;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.nr1-assinatura-label {
+  font-size: 10.5px;
+  color: #7a8580;
+  margin: 0 0 20px;
+}
+.nr1-assinatura-linha {
+  width: 100%;
+  height: 1px;
+  background: #0e1f1a;
+  margin: 20px 0 10px;
+}
+.nr1-assinatura-nome {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0e1f1a;
+  margin: 0 0 2px;
+}
+.nr1-assinatura-sub {
+  font-size: 10.5px;
+  color: #4a5f58;
+  margin: 0 0 4px;
+}
+.nr1-assinatura-data {
+  font-size: 10.5px;
+  color: #7a8580;
+  margin: 0;
+}
+
+.nr1-nota-legal {
+  background: #f7f5ef;
+  border: 1px solid #e8e2d5;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.nr1-nota-legal-titulo {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #0e1f1a;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.nr1-nota-legal p {
+  font-size: 10px;
+  color: #4a5f58;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.nr1-footer-final {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #7a8580;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e2d5;
+}
+
+/* ============================================ */
+/* PRINT STYLES — PDF EXPORT                    */
+/* ============================================ */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    background: white !important;
+  }
+  nav, aside, header, .print\\:hidden {
+    display: none !important;
+  }
+  .nr1-report .nr1-page {
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    page-break-after: always;
+  }
+  .nr1-report {
+    padding: 0 !important;
+  }
+  main, [data-admin-main] {
+    padding: 0 !important;
+  }
+}
 
 @layer base {
   body {

@@ -273,6 +273,79 @@ export function extrairTopProblemas(
     .map((r) => r.pergunta);
 }
 
+// Stopwords em português — palavras comuns que devem ser filtradas da nuvem
+const STOPWORDS_PT = new Set([
+  'a','o','e','é','de','da','do','das','dos','em','no','na','nos','nas','um','uma','uns','umas',
+  'para','por','com','sem','sobre','entre','até','após','ante','desde','que','quem','qual','onde',
+  'como','quando','porque','pois','mas','ou','se','já','não','sim','mais','menos','muito','muita',
+  'muitos','muitas','pouco','pouca','poucos','poucas','todo','toda','todos','todas','tão','tanto',
+  'tanta','tantos','tantas','essa','esse','este','esta','isso','isto','aquele','aquela','aquilo',
+  'meu','minha','meus','minhas','seu','sua','seus','suas','teu','tua','teus','tuas','nosso','nossa',
+  'nossos','nossas','eu','tu','ele','ela','nós','vós','eles','elas','você','vocês','me','te','se',
+  'nos','vos','lhe','lhes','o','a','está','estão','estava','estavam','fui','foi','foram','ser',
+  'ter','tem','têm','há','havia','houve','são','seja','estou','estamos','ficar','fica','ficam',
+  'dar','deu','dar','fazer','faz','fazem','fazendo','feito','feita','sim','também','só','ainda',
+  'então','assim','aqui','ali','lá','depois','antes','sempre','nunca','hoje','ontem','agora','já',
+  'bem','mal','vc','vcs','tb','pq','né','ta','tá','to','tô','vai','vou','pra','pro','num','numa',
+  'isso','tudo','nada','algo','alguém','ninguém','outro','outra','outros','outras','mesmo','mesma',
+  'bastante','realmente','apenas','só','talvez','pode','podem','posso','pode-se','deve','devem',
+  'estamos','estava','trabalho','escola','escolar','aula','aulas','docente','professor','professores',
+  'minha','meu','às','à','gente','coisa','coisas','jeito','tipo','vezes','vez','dias','dia','tempo',
+  'forma','lado','parte','hora','horas','anos','ano','mês','semana','algum','alguma','alguns','algumas',
+  'sou','era','eram','vai','vão','fazia','fazem','tinha','tem','teve','tendo','tendo','sendo','ficar',
+  'outra','outros','outras','outro','pouco','pouca','poucos','poucas','muito','muita','certo','certa',
+  'deles','delas','dele','dela','todo','toda','cada','qualquer','quaisquer','próprio','própria',
+  'pra','com','sem','né','tá','ter','ser','estar','foi','são','tô','vou','vai','deu','dá',
+]);
+
+function normalizarPalavra(p: string): string {
+  return p
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[^a-z0-9\s]/g, '')      // remove pontuação
+    .trim();
+}
+
+export function extrairNuvemPalavras(
+  entradas: string[] | { texto: string; peso: number }[],
+  limite = 40,
+  minTamanho = 3,
+): { texto: string; contagem: number }[] {
+  const contagem = new Map<string, { original: string; count: number }>();
+
+  // Normalizar entrada: aceitar string[] ou { texto, peso }[]
+  const normalizado = (entradas as Array<string | { texto: string; peso: number }>).map((e) =>
+    typeof e === 'string' ? { texto: e, peso: 1 } : e
+  );
+
+  for (const { texto, peso } of normalizado) {
+    if (!texto) continue;
+    // Split por espaços e pontuação
+    const palavras = texto.split(/[\s,.\-;:!?()\[\]"'\/\\]+/);
+    for (const p of palavras) {
+      const norm = normalizarPalavra(p);
+      if (!norm || norm.length < minTamanho) continue;
+      if (STOPWORDS_PT.has(norm)) continue;
+      if (/^\d+$/.test(norm)) continue; // só números
+      const existing = contagem.get(norm);
+      if (existing) {
+        existing.count += peso;
+      } else {
+        // Guardar forma original com acentos para exibição (primeira ocorrência em minúsculo)
+        contagem.set(norm, { original: p.toLowerCase().replace(/[^\p{L}0-9\-]/gu, ''), count: peso });
+      }
+    }
+  }
+
+  return Array.from(contagem.values())
+    .filter((v) => v.count >= 2) // mínimo de 2 (com peso)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limite)
+    .map((v) => ({ texto: v.original || '', contagem: v.count }))
+    .filter((v) => v.texto.length >= minTamanho);
+}
+
 // Escala máxima por bloco (para normalização ao radar 0-10)
 // null = categórico, excluir do radar
 const ESCALA_MAX_BLOCO: Record<string, number | null> = {
@@ -328,10 +401,10 @@ export function calcularRadarEstresse(
 
 function formatarNomeBloco(bloco: string): string {
   const mapa: Record<string, string> = {
-    lideranca_sistema: 'Liderança/Sistema',
-    colegas: 'Colegas',
-    alunos: 'Alunos',
-    atividade_docente: 'Atividade Docente',
+    lideranca_sistema: 'Relações no ambiente escolar',
+    colegas: 'Relação com os colegas',
+    alunos: 'Relação com os alunos',
+    atividade_docente: 'Atividade docente',
     autocuidado: 'Autocuidado',
     vinculos_familiares: 'Vínculos Familiares',
     rede_apoio: 'Rede de Apoio',
@@ -343,6 +416,7 @@ function formatarNomeBloco(bloco: string): string {
     burnout_relacional_teste: 'Burnout Relacional',
     estilo_comunicacao: 'Estilo Comunicação',
     comunicacao: 'Comunicação',
+    relacionamentos: 'Relacionamentos',
     pressao_financeira: 'Pressão Financeira',
     organizacao_financeira: 'Organização',
     endividamento: 'Endividamento',

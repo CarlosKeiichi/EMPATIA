@@ -62,8 +62,8 @@ export default function JornadaPage() {
 
   const NOMES_TESTE: Record<string, string> = {
     estresse_ocupacional: 'Estresse Ocupacional (IPCS)',
-    inteligencia_emocional_teste: 'Inteligencia Emocional',
-    estilo_comunicacao: 'Estilo de Comunicacao',
+    inteligencia_emocional_teste: 'Inteligência Emocional',
+    estilo_comunicacao: 'Estilo de Comunicação',
     burnout_relacional_teste: 'Burnout Relacional',
   };
 
