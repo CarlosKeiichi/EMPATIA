@@ -22,6 +22,23 @@ const NAV_ITEMS = [
       <path d="M18 16c0-2.5-1.8-4-4-4-.8 0-1.5.2-2 .5" />
     </svg>
   )},
+  { href: '/admin/relatorio-nr1', label: 'Relatório NR-1', badge: 'PGR', icon: (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V6l-4-4z" />
+      <polyline points="14 2 14 6 18 6" />
+      <line x1="7" y1="10" x2="13" y2="10" />
+      <line x1="7" y1="13" x2="13" y2="13" />
+      <line x1="7" y1="16" x2="10" y2="16" />
+    </svg>
+  )},
+  { href: '/admin/instituicoes', label: 'Instituições', superadminOnly: true, icon: (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 18h16" />
+      <path d="M4 18V8l6-4 6 4v10" />
+      <rect x="8" y="12" width="4" height="6" />
+      <path d="M7 9h1M12 9h1" />
+    </svg>
+  )},
   { href: '/admin/configuracoes', label: 'Config IA', icon: (
     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10 2v1.5M10 16.5V18M18 10h-1.5M3.5 10H2M15.66 4.34l-1.06 1.06M5.4 14.6l-1.06 1.06M15.66 15.66l-1.06-1.06M5.4 5.4L4.34 4.34" />
@@ -44,7 +61,7 @@ const NAV_ITEMS = [
 interface EscolaInfo {
   nome: string;
   professores: number;
-  genero: string;
+  ultimaAvaliacao: string;
   faixaEtaria: string;
 }
 
@@ -59,16 +76,32 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [escola, setEscola] = useState<EscolaInfo | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth')
+      .then((r) => r.json())
+      .then((data) => setRole(data?.role ?? null))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/dashboard')
       .then(r => r.json())
       .then(data => {
         if (data) {
+          // Determinar última avaliação a partir da tendência de conclusão ou data atual
+          let ultimaAvaliacao = '—';
+          if (data.ultimaAvaliacao) {
+            const d = new Date(data.ultimaAvaliacao);
+            ultimaAvaliacao = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+          } else if (data.jornadasConcluidas > 0) {
+            ultimaAvaliacao = 'Hoje';
+          }
           setEscola({
             nome: 'Escola Principal',
             professores: data.totalProfessoresEscola || data.totalProfessores || 0,
-            genero: '—',
+            ultimaAvaliacao,
             faixaEtaria: '31 - 50',
           });
         }
@@ -112,7 +145,9 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-1 space-y-0.5">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter(
+            (item) => !('superadminOnly' in item && item.superadminOnly) || role === 'superadmin'
+          ).map((item) => {
             const active = isActive(item.href);
             return (
               <Link
@@ -128,7 +163,12 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
                 <span className={active ? 'text-primary-600' : 'text-warm-400'}>
                   {item.icon}
                 </span>
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {'badge' in item && item.badge && (
+                  <span className="text-[8.5px] font-black tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -143,11 +183,11 @@ export default function AdminLayout({ children, titulo, subtitulo }: AdminLayout
               <span className="font-bold text-primary-800">{escola?.professores || '—'}</span>
             </div>
             <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-warm-500">Genero:</span>
-              <span className="font-bold text-primary-800">{escola?.genero || '—'}</span>
+              <span className="text-warm-500">Última avaliação:</span>
+              <span className="font-bold text-primary-800">{escola?.ultimaAvaliacao || '—'}</span>
             </div>
             <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-warm-500">Faixa etaria:</span>
+              <span className="text-warm-500">Faixa etária:</span>
               <span className="font-bold text-primary-800">{escola?.faixaEtaria || '—'}</span>
             </div>
           </div>

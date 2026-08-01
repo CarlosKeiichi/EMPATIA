@@ -7,3 +7,7 @@ node_modules/
 dist/
 .vercel
 .env*.local
+
+# Artefatos de build e backups locais
+*.tsbuildinfo
+prisma/*.db.backup-*

@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode((process.env.JWT_SECRET || 'dev-secret-troque-em-producao').trim());
 
-const PUBLIC_ROUTES = ['/', '/cadastro', '/api/auth'];
+const PUBLIC_ROUTES = ['/', '/cadastro', '/api/auth', '/api/instituicoes/validar'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -10,6 +10,7 @@ async function main() {
   const escola = await prisma.escola.create({
     data: {
       nome: 'Escola Municipal Prof. Maria da Silva',
+      codigo: 'MARIA-DA-SILVA-DEMO',
       cidade: 'São Paulo',
       estado: 'SP',
       redeEnsino: 'municipal',

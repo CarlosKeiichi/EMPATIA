@@ -3,6 +3,7 @@ import { login, hashSenha, getUsuarioLogado } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { loginSchema, registroSchema } from '@/lib/validations';
+import { resolverCodigo } from '@/lib/instituicoes';
 
 // GET /api/auth - Dados do usuario logado (inclui dados demográficos para professores)
 export async function GET() {
@@ -133,8 +134,14 @@ async function registrar(dados: {
   faixaEtaria?: string;
   frequenciaAulas?: string;
   funcaoEnsino?: string;
-  escolaId?: string;
+  codigo: string;
 }) {
+  // Revalida o codigo no servidor. O client manda o codigo, nunca o escolaId.
+  const instituicao = await resolverCodigo(dados.codigo);
+  if (!instituicao.valida) {
+    return NextResponse.json({ erro: instituicao.erro }, { status: 400 });
+  }
+
   const existente = await prisma.user.findUnique({ where: { email: dados.email } });
   if (existente) {
     return NextResponse.json({ erro: 'Email já cadastrado' }, { status: 400 });
@@ -153,7 +160,7 @@ async function registrar(dados: {
           faixaEtaria: dados.faixaEtaria,
           frequenciaAulas: dados.frequenciaAulas,
           funcaoEnsino: dados.funcaoEnsino,
-          escolaId: dados.escolaId || undefined,
+          escolaId: instituicao.escolaId,
         },
       },
     },

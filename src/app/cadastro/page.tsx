@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 
 const generos = [
   { valor: 'feminino', label: 'Feminino' },
   { valor: 'masculino', label: 'Masculino' },
-  { valor: 'nao_binario', label: 'Nao-binario' },
-  { valor: 'prefiro_nao_dizer', label: 'Prefiro nao dizer' },
+  { valor: 'nao_binario', label: 'Não-binário' },
+  { valor: 'prefiro_nao_dizer', label: 'Prefiro não dizer' },
 ];
 
 const faixasEtarias = [
@@ -21,13 +21,21 @@ const faixasEtarias = [
 
 const frequencias = [
   { valor: 'integral', label: 'Tempo integral (40h+)' },
-  { valor: 'parcial', label: 'Meio periodo (20h)' },
+  { valor: 'parcial', label: 'Meio período (20h)' },
   { valor: 'eventual', label: 'Eventual / substituto' },
 ];
+
+type EstadoCodigo =
+  | { status: 'vazio' }
+  | { status: 'verificando' }
+  | { status: 'valido'; nome: string }
+  | { status: 'invalido'; erro: string };
 
 export default function CadastroPage() {
   const router = useRouter();
   const [etapa, setEtapa] = useState(1);
+  const [codigo, setCodigo] = useState('');
+  const [estadoCodigo, setEstadoCodigo] = useState<EstadoCodigo>({ status: 'vazio' });
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -39,11 +47,54 @@ export default function CadastroPage() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
 
+  // Contador de requisicoes: so a validacao mais recente pode escrever no estado.
+  // Sem isso, uma resposta lenta de um codigo antigo sobrescreve a do codigo atual.
+  const validacaoAtual = useRef(0);
+
+  async function validarCodigo(valor: string): Promise<EstadoCodigo> {
+    const limpo = valor.trim();
+    if (!limpo) {
+      const vazio: EstadoCodigo = { status: 'vazio' };
+      setEstadoCodigo(vazio);
+      return vazio;
+    }
+
+    const requisicao = ++validacaoAtual.current;
+    setEstadoCodigo({ status: 'verificando' });
+
+    let resultado: EstadoCodigo;
+    try {
+      const res = await fetch(`/api/instituicoes/validar?codigo=${encodeURIComponent(limpo)}`);
+      const data = await res.json();
+      resultado = data.valida
+        ? { status: 'valido', nome: data.nome }
+        : { status: 'invalido', erro: data.erro || 'Código inválido' };
+    } catch {
+      resultado = { status: 'invalido', erro: 'Não foi possível verificar o código agora.' };
+    }
+
+    // Uma validacao mais nova ja partiu — descartar esta em vez de sobrescrever a tela.
+    if (requisicao !== validacaoAtual.current) return resultado;
+
+    setEstadoCodigo(resultado);
+    return resultado;
+  }
+
+  // Pre-preenche a partir de /cadastro?codigo=X — o link que a instituicao distribui.
+  // Lido de window em vez de useSearchParams para nao exigir um boundary de Suspense.
+  useEffect(() => {
+    const daUrl = new URLSearchParams(window.location.search).get('codigo');
+    if (!daUrl) return;
+    setCodigo(daUrl);
+    validarCodigo(daUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleCadastro() {
     setErro('');
 
     if (senha !== senhaConfirm) {
-      setErro('As senhas nao coincidem');
+      setErro('As senhas não coincidem');
       return;
     }
 
@@ -63,6 +114,7 @@ export default function CadastroPage() {
           nome,
           email,
           senha,
+          codigo,
           genero: genero || undefined,
           faixaEtaria: faixaEtaria || undefined,
           frequenciaAulas: frequenciaAulas || undefined,
@@ -144,6 +196,40 @@ export default function CadastroPage() {
               </div>
 
               <div>
+                <label className="block text-sm font-semibold text-warm-700 mb-1.5">Código da instituição</label>
+                <input
+                  type="text"
+                  className="input uppercase tracking-wide"
+                  placeholder="Ex: DESCOMPLICA-7K2M"
+                  value={codigo}
+                  onChange={(e) => {
+                    setCodigo(e.target.value);
+                    setEstadoCodigo({ status: 'vazio' });
+                  }}
+                  onBlur={(e) => validarCodigo(e.target.value)}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  required
+                />
+                {estadoCodigo.status === 'verificando' && (
+                  <p className="text-warm-500 text-sm mt-1.5">Verificando código...</p>
+                )}
+                {estadoCodigo.status === 'valido' && (
+                  <p className="text-primary-700 text-sm mt-1.5 font-semibold animate-fade-in">
+                    ✓ {estadoCodigo.nome}
+                  </p>
+                )}
+                {estadoCodigo.status === 'invalido' && (
+                  <p className="text-red-600 text-sm mt-1.5 animate-fade-in">{estadoCodigo.erro}</p>
+                )}
+                {estadoCodigo.status === 'vazio' && (
+                  <p className="text-warm-500 text-sm mt-1.5">
+                    Recebido da escola ou rede em que você trabalha.
+                  </p>
+                )}
+              </div>
+
+              <div>
                 <label className="block text-sm font-semibold text-warm-700 mb-1.5">Nome completo</label>
                 <input
                   type="text"
@@ -172,7 +258,7 @@ export default function CadastroPage() {
                 <input
                   type="password"
                   className="input"
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Mínimo 6 caracteres"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
@@ -198,14 +284,28 @@ export default function CadastroPage() {
               )}
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   setErro('');
+                  if (!codigo.trim()) {
+                    setErro('Informe o código da sua instituição');
+                    return;
+                  }
                   if (!nome.trim() || !email.trim() || !senha.trim()) {
                     setErro('Preencha todos os campos obrigatorios');
                     return;
                   }
                   if (senha !== senhaConfirm) {
-                    setErro('As senhas nao coincidem');
+                    setErro('As senhas não coincidem');
+                    return;
+                  }
+                  // Quem cola o codigo e clica direto nunca dispara o onBlur —
+                  // validar aqui evita mandar a pessoa pra etapa 2 com codigo furado.
+                  let estado = estadoCodigo;
+                  if (estado.status !== 'valido') {
+                    estado = await validarCodigo(codigo);
+                  }
+                  if (estado.status !== 'valido') {
+                    setErro(estado.status === 'invalido' ? estado.erro : 'Confira o código da instituição');
                     return;
                   }
                   setEtapa(2);
@@ -221,11 +321,11 @@ export default function CadastroPage() {
             <div className="space-y-5 animate-fade-in">
               <div>
                 <h2 className="font-bold text-warm-800 text-lg">Perfil profissional</h2>
-                <p className="text-warm-500 text-sm mt-0.5">Opcional — ajuda a personalizar sua experiencia</p>
+                <p className="text-warm-500 text-sm mt-0.5">Opcional — ajuda a personalizar sua experiência</p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-warm-700 mb-2">Genero</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-2">Gênero</label>
                 <div className="grid grid-cols-2 gap-2">
                   {generos.map((g) => (
                     <button
@@ -244,7 +344,7 @@ export default function CadastroPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-warm-700 mb-2">Faixa etaria</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-2">Faixa etária</label>
                 <div className="grid grid-cols-2 gap-2">
                   {faixasEtarias.map((f) => (
                     <button
@@ -263,7 +363,7 @@ export default function CadastroPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-warm-700 mb-2">Frequencia de aulas</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-2">Frequência de aulas</label>
                 <div className="space-y-2">
                   {frequencias.map((f) => (
                     <button
@@ -282,7 +382,7 @@ export default function CadastroPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-warm-700 mb-2">Ensinar e sua funcao...</label>
+                <label className="block text-sm font-semibold text-warm-700 mb-2">Ensinar é sua função...</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { valor: 'primaria', label: 'Primaria (principal)' },

@@ -15,7 +15,11 @@ export const registroSchema = z.object({
   faixaEtaria: z.enum(['20-29', '30-39', '40-49', '50-59', '60+']).optional(),
   frequenciaAulas: z.enum(['integral', 'parcial', 'eventual']).optional(),
   funcaoEnsino: z.enum(['primaria', 'secundaria']).optional(),
-  escolaId: z.string().optional(),
+  // O client manda o codigo, nunca o escolaId — senao o vinculo seria forjavel pelo DevTools.
+  codigo: z
+    .string({ required_error: 'Informe o código da sua instituição' })
+    .trim()
+    .min(1, 'Informe o código da sua instituição'),
 });
 
 export const chatSchema = z.object({
@@ -70,6 +74,33 @@ export const perguntaSchema = z.object({
   opcoes: z.string().nullable().optional(),
   ordem: z.number().int().default(0),
   ativa: z.boolean().default(true),
+});
+
+// Codigo aceita letras, numeros e hifen — nada de espaco ou acento, que quebram
+// na hora de ditar por telefone e de colar numa URL.
+const codigoField = z
+  .string()
+  .trim()
+  .min(4, 'Código deve ter pelo menos 4 caracteres')
+  .max(40, 'Código muito longo')
+  .regex(/^[A-Za-z0-9-]+$/, 'Use apenas letras, números e hífen');
+
+export const instituicaoSchema = z.object({
+  nome: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  // Vazio significa "gere um pra mim" a partir do nome.
+  codigo: codigoField.optional(),
+  cidade: z.string().trim().optional(),
+  estado: z.string().trim().optional(),
+  redeEnsino: z.enum(['municipal', 'estadual', 'federal', 'privada']).optional(),
+});
+
+export const instituicaoUpdateSchema = z.object({
+  nome: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').optional(),
+  codigo: codigoField.optional(),
+  cidade: z.string().trim().optional(),
+  estado: z.string().trim().optional(),
+  redeEnsino: z.enum(['municipal', 'estadual', 'federal', 'privada']).optional(),
+  ativa: z.boolean().optional(),
 });
 
 export const reordenarSchema = z.object({

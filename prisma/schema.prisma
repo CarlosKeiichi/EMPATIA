@@ -59,6 +59,7 @@ model Admin {
 model Escola {
   id          String   @id @default(cuid())
   nome        String
+  codigo      String?  @unique // codigo de convite, sempre em maiuscula (ex: "DESCOMPLICA-7K2M")
   cidade      String?
   estado      String?
   redeEnsino  String?  // "municipal" | "estadual" | "federal" | "privada"

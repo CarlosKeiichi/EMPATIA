@@ -11,6 +11,7 @@ import {
   calcularBurnoutRelacional,
   calcularInteligenciaEmocional,
   calcularEstiloComunicacao,
+  extrairNuvemPalavras,
   BLOCOS_TESTE,
 } from '@/lib/scoring';
 
@@ -22,9 +23,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ erro: 'Não autorizado' }, { status: 401 });
     }
 
-    // Buscar escola do admin
+    // Buscar escola do admin.
+    // O escolaId da query só vale para superadmin — sem isso, um admin sem escola
+    // vinculada leria as métricas de qualquer instituição só trocando a URL.
     const admin = await prisma.admin.findUnique({ where: { userId: usuario.userId } });
-    const escolaId = admin?.escolaId || req.nextUrl.searchParams.get('escolaId');
+    const escolaId =
+      admin?.escolaId ||
+      (usuario.role === 'superadmin' ? req.nextUrl.searchParams.get('escolaId') : null);
 
     // Filtro por jornada (query param)
     const jornadaFiltro = req.nextUrl.searchParams.get('jornada'); // 'trabalho' | 'relacionamentos' | 'financas' | null
@@ -58,10 +63,17 @@ export async function GET(req: NextRequest) {
     const totalProfessores = new Set(jornadas.map((j) => j.professorId)).size;
     const jornadasConcluidas = jornadas.length;
 
-    // Distribuição emocional
-    const estadosFinais = jornadas
-      .map((j) => j.estadoEmocionalFinal)
-      .filter(Boolean) as string[];
+    // Distribuição emocional — agrupar por professor (estado mais recente)
+    const estadoPorProfessor = new Map<string, { estado: string; data: Date }>();
+    for (const j of jornadas) {
+      if (!j.estadoEmocionalFinal) continue;
+      const atual = estadoPorProfessor.get(j.professorId);
+      const dataJornada = j.concluidaEm || j.iniciadaEm;
+      if (!atual || dataJornada > atual.data) {
+        estadoPorProfessor.set(j.professorId, { estado: j.estadoEmocionalFinal, data: dataJornada });
+      }
+    }
+    const estadosFinais = Array.from(estadoPorProfessor.values()).map((v) => v.estado);
     const distribuicaoEmocional = calcularDistribuicaoEmocional(estadosFinais);
 
     // Radar de estresse (agregado)
@@ -79,6 +91,77 @@ export async function GET(req: NextRequest) {
       }))
     );
     const topProblemas = extrairTopProblemas(respostasComPergunta);
+
+    // Nuvem de palavras — filtrar respostas com IMPACTO PSICOLÓGICO real
+    // Considerar: estado emocional negativo, IPCS alto, ou resposta com pontuação alta
+    const textosImpacto: { texto: string; peso: number }[] = [];
+    for (const j of jornadas) {
+      // Calcular IPCS da jornada
+      const respIpcsJ = j.respostas.filter((r) => r.bloco === 'estresse_ocupacional' && r.pontuacao !== null);
+      const ipcsJornada = respIpcsJ.reduce((acc, r) => acc + (r.pontuacao ?? 0), 0);
+
+      // Peso base pelo estado emocional final
+      let pesoJornada = 0;
+      if (j.estadoEmocionalFinal === 'E') pesoJornada = 3;           // Sobrecarregado
+      else if (j.estadoEmocionalFinal === 'D') pesoJornada = 3;      // Cansado
+      else if (j.estadoEmocionalFinal === 'C') pesoJornada = 2;      // Em alerta
+
+      // Bonus por IPCS alto
+      if (ipcsJornada >= 14) pesoJornada += 2;        // Estresse elevado
+      else if (ipcsJornada >= 7) pesoJornada += 1;    // Resistência
+
+      // Bonus por nivelRisco
+      if (j.nivelRisco === 'critico') pesoJornada += 2;
+      else if (j.nivelRisco === 'elevado') pesoJornada += 1;
+
+      for (const r of j.respostas) {
+        if (r.tipo !== 'aberta' || !r.valor || r.valor.length < 3) continue;
+
+        let pesoResposta = pesoJornada;
+        // Bonus se a pergunta específica tem pontuação alta (≥7)
+        if (r.pontuacao !== null && r.pontuacao >= 7) pesoResposta += 2;
+        else if (r.pontuacao !== null && r.pontuacao >= 5) pesoResposta += 1;
+
+        // Só incluir respostas com peso relevante (≥ 2)
+        if (pesoResposta >= 2) {
+          textosImpacto.push({ texto: r.valor, peso: pesoResposta });
+        }
+      }
+    }
+    const nuvemPalavras = extrairNuvemPalavras(textosImpacto, 40);
+
+    // IPCS — Índice de Percepção do Estresse (0-20 pontos, 10 perguntas × max 2)
+    // Pontuação por jornada: soma das pontuações das respostas 'estresse_ocupacional'
+    // Agrupar por professor e pegar a jornada mais recente com IPCS
+    const ipcsPorProfessor = new Map<string, number>();
+    for (const j of jornadas) {
+      const respIpcs = j.respostas.filter((r) => r.bloco === 'estresse_ocupacional' && r.pontuacao !== null);
+      if (respIpcs.length === 0) continue;
+      const pontos = respIpcs.reduce((acc, r) => acc + (r.pontuacao ?? 0), 0);
+      // Se já tem, mantém só se esta jornada for mais recente
+      const atual = ipcsPorProfessor.get(j.professorId);
+      if (atual === undefined) ipcsPorProfessor.set(j.professorId, pontos);
+    }
+    const pontuacoesIpcs = Array.from(ipcsPorProfessor.values());
+    const ipcsMedia = pontuacoesIpcs.length > 0
+      ? pontuacoesIpcs.reduce((a, b) => a + b, 0) / pontuacoesIpcs.length
+      : 0;
+    // Classificar zona pela média
+    let ipcsZona = 'sem_sinais';
+    if (ipcsMedia >= 14) ipcsZona = 'estresse_elevado';
+    else if (ipcsMedia >= 7) ipcsZona = 'resistencia';
+    // Distribuição de professores por zona
+    const ipcsDistribuicao = {
+      sem_sinais: pontuacoesIpcs.filter((p) => p <= 6).length,
+      resistencia: pontuacoesIpcs.filter((p) => p >= 7 && p <= 13).length,
+      estresse_elevado: pontuacoesIpcs.filter((p) => p >= 14).length,
+    };
+    const ipcs = {
+      media: Math.round(ipcsMedia * 10) / 10,
+      zona: ipcsZona,
+      distribuicao: ipcsDistribuicao,
+      totalProfessoresAvaliados: pontuacoesIpcs.length,
+    };
 
     // IBED médio
     const ibedValues = jornadas
@@ -130,6 +213,14 @@ export async function GET(req: NextRequest) {
       : 0;
 
     // === NOVAS METRICAS ===
+
+    // Última avaliação — data da jornada concluída mais recente
+    const jornadasComData = jornadas.filter((j) => j.concluidaEm);
+    const ultimaAvaliacao = jornadasComData.length > 0
+      ? jornadasComData
+          .map((j) => new Date(j.concluidaEm!).getTime())
+          .reduce((max, cur) => Math.max(max, cur), 0)
+      : null;
 
     // Duracao media (em minutos)
     const duracoes = jornadas
@@ -323,9 +414,11 @@ export async function GET(req: NextRequest) {
       jornadasConcluidas,
       taxaConclusao,
       irpe,
+      ipcs,
       distribuicaoEmocional,
       radarEstresse,
       topProblemas,
+      nuvemPalavras,
       ibedMedio,
       ibedDiferencaMedia,
       duracaoMedia,
@@ -333,6 +426,7 @@ export async function GET(req: NextRequest) {
       taxaAbandono,
       tendenciaConclusao,
       alertas,
+      ultimaAvaliacao: ultimaAvaliacao ? new Date(ultimaAvaliacao).toISOString() : null,
       // Dados de relacionamentos
       irpr,
       ieMedia,
