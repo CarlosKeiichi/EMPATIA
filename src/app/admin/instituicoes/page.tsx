@@ -25,6 +25,13 @@ export default function InstituicoesPage() {
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [copiado, setCopiado] = useState<string | null>(null);
+  // Instituição recém-criada: o link fica em destaque justamente no momento em
+  // que a pessoa quer mandá-lo, em vez de exigir que ela ache a linha na tabela.
+  const [recemCriada, setRecemCriada] = useState<{ nome: string; codigo: string } | null>(null);
+
+  function linkConvite(codigo: string) {
+    return `${window.location.origin}/cadastro?codigo=${encodeURIComponent(codigo)}`;
+  }
 
   async function carregar() {
     try {
@@ -71,6 +78,7 @@ export default function InstituicoesPage() {
       setNovoNome('');
       setNovoCodigo('');
       setCriando(false);
+      setRecemCriada({ nome: data.instituicao.nome, codigo: data.instituicao.codigo });
       await carregar();
     } catch {
       setErro('Erro de conexão. Tente novamente.');
@@ -89,8 +97,7 @@ export default function InstituicoesPage() {
   }
 
   async function copiarLink(codigo: string) {
-    const link = `${window.location.origin}/cadastro?codigo=${encodeURIComponent(codigo)}`;
-    await navigator.clipboard.writeText(link);
+    await navigator.clipboard.writeText(linkConvite(codigo));
     setCopiado(codigo);
     setTimeout(() => setCopiado(null), 2000);
   }
@@ -126,6 +133,49 @@ export default function InstituicoesPage() {
   return (
     <AdminLayout titulo="Instituições" subtitulo="Códigos de acesso e uso por instituição">
       <div className="space-y-6">
+        {/* Confirmação da criação — o link à mão no momento de enviá-lo */}
+        {recemCriada && (
+          <div className="bg-[#e8f4ee] rounded-2xl border border-[#b6ddc8] p-6 animate-fade-in">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-bold text-[#1f5c46]">
+                  {recemCriada.nome} criada
+                </p>
+                <p className="text-[#2d7a5e] text-sm mt-0.5">
+                  Envie o link abaixo para os professores dessa instituição.
+                </p>
+              </div>
+              <button
+                onClick={() => setRecemCriada(null)}
+                className="text-[#2d7a5e] text-sm font-semibold shrink-0 hover:underline"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold text-[#2d7a5e] uppercase tracking-wide">Código</p>
+              <code className="block mt-1 text-2xl font-bold text-[#1f5c46] font-mono tracking-wide">
+                {recemCriada.codigo}
+              </code>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-semibold text-[#2d7a5e] uppercase tracking-wide">
+                Link de convite
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <code className="bg-white/70 border border-[#b6ddc8] rounded-xl px-3 py-2 text-sm text-[#1f5c46] font-mono break-all select-all">
+                  {linkConvite(recemCriada.codigo)}
+                </code>
+                <button onClick={() => copiarLink(recemCriada.codigo)} className="btn-primary">
+                  {copiado === recemCriada.codigo ? 'Copiado!' : 'Copiar link'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Criar */}
         <div className="bg-white rounded-2xl border border-[#ece8e1] p-6">
           {!criando ? (
