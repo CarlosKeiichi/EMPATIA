@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { loginSchema, registroSchema } from '@/lib/validations';
 import { resolverCodigo } from '@/lib/instituicoes';
+import { VERSAO_TERMO, TIPOS_CONSENTIMENTO } from '@/config/termo';
 
 // GET /api/auth - Dados do usuario logado (inclui dados demográficos para professores)
 export async function GET() {
@@ -135,6 +136,8 @@ async function registrar(dados: {
   frequenciaAulas?: string;
   funcaoEnsino?: string;
   codigo: string;
+  aceiteTermos: true;
+  aceiteDadosSaude: true;
 }) {
   // Revalida o codigo no servidor. O client manda o codigo, nunca o escolaId.
   const instituicao = await resolverCodigo(dados.codigo);
@@ -161,6 +164,15 @@ async function registrar(dados: {
           frequenciaAulas: dados.frequenciaAulas,
           funcaoEnsino: dados.funcaoEnsino,
           escolaId: instituicao.escolaId,
+          // Os dois consentimentos nascem na mesma escrita que o professor:
+          // se a gravacao falhar, nao sobra conta sem prova de consentimento.
+          consentimentos: {
+            create: TIPOS_CONSENTIMENTO.map((tipo) => ({
+              tipo,
+              versao: VERSAO_TERMO,
+              origem: 'cadastro',
+            })),
+          },
         },
       },
     },

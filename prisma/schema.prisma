@@ -40,6 +40,7 @@ model Professor {
   jornadas      Jornada[]
   diagnosticos  Diagnostico[]
   conversas     Conversa[]
+  consentimentos Consentimento[]
 }
 
 model Admin {
@@ -68,6 +69,26 @@ model Escola {
 
   professores Professor[]
   admins      Admin[]
+}
+
+// ============================================
+// CONSENTIMENTOS (LGPD)
+// ============================================
+
+// Append-only: cada aceite vira uma linha e nunca e sobrescrito.
+// Uma revogacao entra como linha nova com revogadoEm preenchido, preservando
+// a prova de que a pessoa consentiu, quando, e com qual versao do termo.
+model Consentimento {
+  id          String    @id @default(cuid())
+  professorId String
+  professor   Professor @relation(fields: [professorId], references: [id])
+  tipo        String    // "termos_uso" | "dados_saude"
+  versao      String    // versao do termo vigente no momento do aceite (ex: "1.0")
+  aceitoEm    DateTime  @default(now())
+  revogadoEm  DateTime?
+  origem      String    @default("cadastro") // onde o aceite foi coletado
+
+  @@index([professorId, tipo])
 }
 
 // ============================================

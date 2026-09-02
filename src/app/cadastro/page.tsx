@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
+import TermoModal from '@/components/TermoModal';
+import { RESUMO_CADASTRO, CONSENTIMENTOS } from '@/config/termo';
 
 const generos = [
   { valor: 'feminino', label: 'Feminino' },
@@ -46,6 +48,10 @@ export default function CadastroPage() {
   const [funcaoEnsino, setFuncaoEnsino] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
+  // Nenhum pre-marcado: consentimento pre-marcado nao e consentimento.
+  const [aceiteTermos, setAceiteTermos] = useState(false);
+  const [aceiteDadosSaude, setAceiteDadosSaude] = useState(false);
+  const [termoAberto, setTermoAberto] = useState(false);
 
   // Contador de requisicoes: so a validacao mais recente pode escrever no estado.
   // Sem isso, uma resposta lenta de um codigo antigo sobrescreve a do codigo atual.
@@ -115,6 +121,8 @@ export default function CadastroPage() {
           email,
           senha,
           codigo,
+          aceiteTermos,
+          aceiteDadosSaude,
           genero: genero || undefined,
           faixaEtaria: faixaEtaria || undefined,
           frequenciaAulas: frequenciaAulas || undefined,
@@ -277,6 +285,68 @@ export default function CadastroPage() {
                 />
               </div>
 
+              {/* Resumo — ninguem le termo longo na hora do cadastro */}
+              <div className="bg-primary-50/70 border border-primary-100 rounded-2xl p-4">
+                <ul className="space-y-2">
+                  {RESUMO_CADASTRO.map((linha) => (
+                    <li key={linha} className="flex gap-2.5 text-sm text-warm-700 leading-snug">
+                      <span className="text-primary-600 font-bold shrink-0">✓</span>
+                      <span>{linha}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setTermoAberto(true)}
+                  className="text-primary-700 text-sm font-semibold mt-3 hover:underline"
+                >
+                  Ler o termo completo
+                </button>
+              </div>
+
+              {/* Consentimentos — separados, nenhum pre-marcado */}
+              <div className="space-y-3">
+                <label className="flex gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={aceiteTermos}
+                    onChange={(e) => setAceiteTermos(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 shrink-0 rounded-md border-2 border-warm-300 text-primary-600 accent-primary-600 cursor-pointer"
+                  />
+                  <span className="text-sm text-warm-700 leading-snug">
+                    Li e aceito os{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setTermoAberto(true); }}
+                      className="text-primary-700 font-semibold underline underline-offset-2"
+                    >
+                      Termos de Uso
+                    </button>{' '}
+                    e a{' '}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setTermoAberto(true); }}
+                      className="text-primary-700 font-semibold underline underline-offset-2"
+                    >
+                      Política de Privacidade
+                    </button>
+                    .
+                  </span>
+                </label>
+
+                <label className="flex gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={aceiteDadosSaude}
+                    onChange={(e) => setAceiteDadosSaude(e.target.checked)}
+                    className="mt-0.5 w-5 h-5 shrink-0 rounded-md border-2 border-warm-300 text-primary-600 accent-primary-600 cursor-pointer"
+                  />
+                  <span className="text-sm text-warm-700 leading-snug">
+                    {CONSENTIMENTOS[1].rotulo}
+                  </span>
+                </label>
+              </div>
+
               {erro && (
                 <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl border border-red-100 animate-fade-in">
                   {erro}
@@ -310,10 +380,16 @@ export default function CadastroPage() {
                   }
                   setEtapa(2);
                 }}
-                className="btn-primary w-full"
+                disabled={!aceiteTermos || !aceiteDadosSaude}
+                className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Proximo
               </button>
+              {(!aceiteTermos || !aceiteDadosSaude) && (
+                <p className="text-warm-500 text-xs text-center -mt-2">
+                  Marque os dois consentimentos acima para continuar.
+                </p>
+              )}
             </div>
           )}
 
@@ -432,6 +508,8 @@ export default function CadastroPage() {
             </div>
           )}
         </div>
+
+        <TermoModal aberto={termoAberto} onFechar={() => setTermoAberto(false)} />
 
         <p className="text-center text-sm text-warm-500 mt-6 animate-fade-in" style={{ animationDelay: '0.5s' }}>
           Ja tem conta?{' '}

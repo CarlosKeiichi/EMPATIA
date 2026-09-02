@@ -20,6 +20,16 @@ export const registroSchema = z.object({
     .string({ required_error: 'Informe o código da sua instituição' })
     .trim()
     .min(1, 'Informe o código da sua instituição'),
+  // Consentimentos separados: a LGPD exige manifestacao especifica e destacada
+  // para dado de saude (Art. 11, I). z.literal(true) recusa false e ausente.
+  aceiteTermos: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário aceitar os Termos de Uso e a Política de Privacidade' }),
+  }),
+  aceiteDadosSaude: z.literal(true, {
+    errorMap: () => ({
+      message: 'É necessário autorizar o tratamento das informações sobre bem-estar emocional',
+    }),
+  }),
 });
 
 export const chatSchema = z.object({
